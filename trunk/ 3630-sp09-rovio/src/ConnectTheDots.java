@@ -17,20 +17,8 @@ public class ConnectTheDots extends Planner {
 	/** control the robot to move to the next point in the plan */
 	public void makeMove() {
 		while (this.iterator.hasNext()) {
-			this.driveTo(this.iterator.next());
+			super.driveTo(this.iterator.next());
 		}
-	}
-	
-	/** drives from current point to point */
-	protected void driveTo(Waypoint point) {
-		// check if already at point: if so, do nothing
-		
-		// turn towards point
-		
-		// drive to point
-		
-		// turn towards final theta
-		
 	}
 	
 }
