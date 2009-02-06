@@ -20,7 +20,9 @@ public abstract class Controller {
 	* @param args command-line arguments
 	*/
 	public static void main(String[] args) {
-		Controller.connectTheDots();
+		//Controller.connectTheDots();
+		Robot r = new Robot();
+		r.drive(1);
 	}
 	
 }
