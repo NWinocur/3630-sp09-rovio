@@ -31,8 +31,8 @@ public abstract class Planner {
 			(point.getTheta() == currentPosition.getTheta())))
 		{
 			// turn towards point
-			double directionOfPoint = ; //////////// FIX THIS
-			double angleToTurn = this.currentPosition.angleBetween(directionOfPoint);
+			double thetaPrime = this.currentPosition.getThetaPrime(point);
+			double angleToTurn = this.currentPosition.angleBetween(thetaPrime);
 			this.robot.turn(angleToTurn);
 			// drive to point
 			double hypot = this.currentPosition.distance(point);
