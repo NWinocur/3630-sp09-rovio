@@ -37,4 +37,14 @@ public class Waypoint {
 		return nextTheta - this.theta;
 	}
 	
+	public double getThetaPrime(Waypoint p) {
+		double dx = p.getX() - this.x;
+		double dy = p.getY() - this.y;
+		double thetaPrime = Math.atan2(dy, dx);
+		thetaPrime = thetaPrime * (180 / Math.PI);
+		thetaPrime = thetaPrime - 90;
+		thetaPrime = thetaPrime * (-1);
+		return thetaPrime
+	}
+	
 }
