@@ -20,7 +20,7 @@ public class Robot extends RovioAPI {
 	public void drive(double distance) {
 		double messages = distance * DISTANCE_SCALE;
 		for (int i = 0; i < messages; i++) {
-			super.manualDrive(RovioConstants.DriveType.FORWARD, SPEED);
+			super.manualDrive(RovioConstants.DriveType.FORWARD, (int)SPEED);
 		}
 	}
 	
