@@ -44,7 +44,7 @@ public class Waypoint {
 		thetaPrime = thetaPrime * (180 / Math.PI);
 		thetaPrime = thetaPrime - 90;
 		thetaPrime = thetaPrime * (-1);
-		return thetaPrime
+		return thetaPrime;
 	}
 	
 }

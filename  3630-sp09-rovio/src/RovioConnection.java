@@ -70,14 +70,14 @@ public class RovioConnection {
 		try {
 			return open(new URL("http", host, resource));
 		} catch(MalformedURLException e) {
-			throw new IOException(e);
+			throw new IOException(e.toString());
 		}
 	}
 	
 	public InputStream open(String resource, Object... args) throws IOException {
 		// Ensure early failure if odd number of argument name/value pairings
 		if(args.length % 2 != 0)
-			throw new IOException(new IllegalArgumentException("Every argument name must have an associated value"));
+			throw new IOException(new IllegalArgumentException("Every argument name must have an associated value").toString());
 		
 		// Append the arguments to the end of the resource
 		for(int i = 0; i < args.length; i += 2) {
