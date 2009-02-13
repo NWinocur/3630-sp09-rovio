@@ -113,7 +113,7 @@ public class Rovio extends Authenticator {
 		// Read the response from the input stream
 		response = responseReader.readLine();
 		// Print Rovio's response
-		while(response != null) {
+		while(responseReader.ready()) {
 			response += "\n" + responseReader.readLine();
 		}
 		System.out.println(response);
@@ -217,7 +217,7 @@ public class Rovio extends Authenticator {
 		System.out.println("Rotate Right 20 Degrees...");
 		doCommand(CommandString.DRIVE_ROTATE_RIGHT_20_DEGREES);
 		Thread.sleep(2000);
-		// lift head upmyRovio.printMCUReport();
+		// lift head up
 		doCommand(CommandString.DRIVE_HEAD_UP);
 		// rotate right 20 degrees
 		System.out.println("Rotate Right 20 Degrees...");
