@@ -27,6 +27,31 @@ public class Rovio extends Authenticator {
 	private String password;
 	private URL rovioBaseURL;
 	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		
+		Rovio myRovio = null;
+		
+		// Create the Rovio
+		try {
+			myRovio = new Rovio("192.168.10.18", "admin", "cs3630");
+			// Ask Rovio to print a general report
+			myRovio.printReport();
+			// Ask Rovio to print an MCU report
+			myRovio.printMCUReport();
+			// Ask Rovio to exercise
+			myRovio.exerciseRovio();
+			// Print version
+			//myRovio.doCommand(CommandString.GET_VER);
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
 	public Rovio(String ipAddress, String username, String password) throws MalformedURLException {
 		this.ipAddress = ipAddress;
 		this.username = username;
@@ -78,7 +103,6 @@ public class Rovio extends Authenticator {
 		responseReader.close();
 	}
 
-	
 	public void doCommand(CommandString command) throws IOException {
 		String response;
 		
@@ -151,6 +175,9 @@ public class Rovio extends Authenticator {
 	
 	public void exerciseRovio() throws IOException, InterruptedException {
 		
+		// print an MCU report
+		System.out.println("MCU Report, Start Exercise:");
+		doCommand(CommandString.GET_MCU_REPORT);
 		// rotate left 20 degrees
 		System.out.println("Rotate Left 20 Degrees...");
 		doCommand(CommandString.DRIVE_ROTATE_LEFT_20_DEGREES);
@@ -163,6 +190,8 @@ public class Rovio extends Authenticator {
 		System.out.println("Rotate Left 20 Degrees...");
 		doCommand(CommandString.DRIVE_ROTATE_LEFT_20_DEGREES);
 		Thread.sleep(2000);
+		System.out.println("MCU Report, After Left Turn Series:");
+		doCommand(CommandString.GET_MCU_REPORT);
 		// put head down
 		System.out.println("Put head down...");
 		doCommand(CommandString.DRIVE_HEAD_DOWN);
@@ -177,33 +206,28 @@ public class Rovio extends Authenticator {
 		System.out.println("Rotate Right 20 Degrees...");
 		doCommand(CommandString.DRIVE_ROTATE_RIGHT_20_DEGREES);
 		Thread.sleep(2000);
+		System.out.println("MCU Report, After Right Turn Series:");
+		doCommand(CommandString.GET_MCU_REPORT);
 		// put head down
 		System.out.println("Put head down...");
 		doCommand(CommandString.DRIVE_HEAD_DOWN);
 		Thread.sleep(2000);
-	}
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		
-		Rovio myRovio = null;
-		
-		// Create the Rovio
-		try {
-			myRovio = new Rovio("192.168.10.18", "admin", "cs3630");
-			// Ask Rovio to print a general report
-			myRovio.printReport();
-			// Ask Rovio to print an MCU report
-			myRovio.printMCUReport();
-			// Ask Rovio to exercise
-			myRovio.exerciseRovio();
+		// drive forward a bit
+		System.out.println("Driving forward...");
+		for(int i = 10; i > 0; i--) {
+			doCommand(CommandString.DRIVE_FORWARD);
+			Thread.sleep(100);
 		}
-		catch(Exception e) {
-			e.printStackTrace();
+		System.out.println("MCU Report, After Driving Forward:");
+		doCommand(CommandString.GET_MCU_REPORT);
+		// drive backward a bit
+		System.out.println("Driving backward...");
+		for(int i = 10; i > 0; i--) {
+			doCommand(CommandString.DRIVE_BACKWARD);
+			Thread.sleep(100);
 		}
-		
+		System.out.println("MCU Report, After Driving Backward:");
+		doCommand(CommandString.GET_MCU_REPORT);
 	}
 	
 	public enum ResponseCode {
