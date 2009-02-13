@@ -78,18 +78,6 @@ public class Rovio extends Authenticator {
 		responseReader.close();
 	}
 
-	public void turnLeft20Degrees() throws IOException {
-		
-		// Command to turn left 20 degrees is: CommandString.DRIVE_ROTATE_LEFT_20_DEGREES
-		doCommand(CommandString.DRIVE_ROTATE_LEFT_20_DEGREES);
-
-	}
-
-	public void turnRight20Degrees() throws IOException {
-		
-		doCommand(CommandString.DRIVE_ROTATE_RIGHT_20_DEGREES);
-
-	}
 	
 	public void doCommand(CommandString command) throws IOException {
 		String response;
