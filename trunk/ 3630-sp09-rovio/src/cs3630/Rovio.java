@@ -169,10 +169,25 @@ public class Rovio extends Authenticator {
 	}
 	
 	public Direction getWheelDirection(Wheel w, String hexResponse) throws Exception {
+		// THIS IS A WORK IN PROGRESS.
+		byte dByte = 0;
+		Direction d = Direction.LEFT;
 		
-		throw new Exception("Unimplemented.");
-//		Direction d = Direction.LEFT;
-//		return d;
+		if(w == Wheel.LEFT) {
+			dByte = this.getByteFromHexString(2, hexResponse);
+		}
+		else if(w == Wheel.RIGHT) {
+			dByte = this.getByteFromHexString(5, hexResponse);
+		}
+		else {	// w == Wheel.BACK
+			dByte = this.getByteFromHexString(8, hexResponse);
+		}
+		
+		// Convert dByte to a direction... don't know yet how to convert, need to test.
+		// Direction corresponds to bit 2 of dByte.
+		// Maybe:
+		// d = Direction.get(dByte);
+		return d;
 	}
 	
 	public void exerciseRovio() throws IOException, InterruptedException {
