@@ -103,7 +103,7 @@ public class Rovio extends Authenticator {
 		responseReader.close();
 	}
 
-	public void doCommand(CommandString command) throws IOException {
+	public String doCommand(CommandString command) throws IOException {
 		String response;
 		
 		// Build the command
@@ -114,11 +114,13 @@ public class Rovio extends Authenticator {
 		response = responseReader.readLine();
 		// Print Rovio's response
 		while(response != null) {
-			System.out.println(response);
-			response = responseReader.readLine();
+			response += "\n" + responseReader.readLine();
 		}
+		System.out.println(response);
 		// Done with the stream
 		responseReader.close();
+		
+		return response;
 	}
 	
 	public byte getByteFromHexString(int offset, String hexString) throws Exception {
