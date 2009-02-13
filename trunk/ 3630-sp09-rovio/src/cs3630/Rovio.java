@@ -170,9 +170,9 @@ public class Rovio extends Authenticator {
 	
 	public Direction getWheelDirection(Wheel w, String hexResponse) throws Exception {
 		
-		Direction d = Direction.LEFT;
-		
-		return d;
+		throw new Exception("Unimplemented.");
+//		Direction d = Direction.LEFT;
+//		return d;
 	}
 	
 	public void exerciseRovio() throws IOException, InterruptedException {
