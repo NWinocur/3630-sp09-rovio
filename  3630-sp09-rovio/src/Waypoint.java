@@ -29,7 +29,7 @@ public class Waypoint {
 	public double distance(double x, double y) {
 		double deltaX = x - this.x;
 		double deltaY = y - this.y;
-		double c2 = deltaX * deltaX + deltaY + deltaY;
+		double c2 = deltaX * deltaX + deltaY * deltaY;
 		return Math.sqrt(c2);
 	}
 	
