@@ -121,42 +121,44 @@ public class Rovio extends Authenticator {
 		return Integer.parseInt(hexString, 16);
 	}
 
-	public int getWheelTicks(Wheel w, String hexResponse) throws Exception {
+	public int getWheelTicks(Wheel w, String mcuResponse) throws Exception {
 		
 		int ticks = 0;
+		mcuResponse = this.parseMCUHex(mcuResponse);
 		
 		if(w == Wheel.LEFT) {
-			ticks = getIntFromHexString(6, hexResponse);
+			ticks = getIntFromHexString(6, mcuResponse);
 		}
 		else if(w == Wheel.RIGHT) {
-			ticks = getIntFromHexString(12, hexResponse);
+			ticks = getIntFromHexString(12, mcuResponse);
 		}
 		else if(w == Wheel.BACK) {
-			ticks = getIntFromHexString(18, hexResponse);
+			ticks = getIntFromHexString(18, mcuResponse);
 		}
 		
 		return ticks;
 	}
 	
-	private String parseHex(String report) {
+	private String parseMCUHex(String mcuResponse) {
 		
-		String hexString = report.substring(report.length() - 30);
+		String hexString = mcuResponse.substring(mcuResponse.length() - 30);
 		return hexString;
 		
 	}
 	
-	public WheelDirection getWheelDir(Wheel w, String hexResponse) throws Exception {
+	public WheelDirection getWheelDir(Wheel w, String mcuResponse) throws Exception {
 
 		WheelDirection d;
+		mcuResponse = this.parseMCUHex(mcuResponse);
 		
 		if(w == Wheel.LEFT) {
-			d = WheelDirection.get(this.getShortFromHexString(4, hexResponse));
+			d = WheelDirection.get(this.getShortFromHexString(4, mcuResponse));
 		}
 		else if(w == Wheel.RIGHT) {
-			d = WheelDirection.get(this.getShortFromHexString(10, hexResponse));
+			d = WheelDirection.get(this.getShortFromHexString(10, mcuResponse));
 		}
 		else {	// w == Wheel.BACK
-			d = WheelDirection.get(this.getShortFromHexString(16, hexResponse));
+			d = WheelDirection.get(this.getShortFromHexString(16, mcuResponse));
 		}
 		return d;
 		
@@ -185,9 +187,9 @@ public class Rovio extends Authenticator {
 		
 	}
 	
-	private void prettyPrintMCU(String report) throws Exception {
+	private void prettyPrintMCU(String mcuResponse) throws Exception {
 
-		String hexString = this.parseHex(report);
+		String hexString = this.parseMCUHex(mcuResponse);
 		System.out.print("Left Wh Rot Dir:\t" + WheelDirection.get(this.getShortFromHexString(4, hexString)) + "\n");
 		System.out.print("Left Wh Num Ticks:\t" + this.getIntFromHexString(6, hexString) + "\n");
 		System.out.print("Right Wh Rot Dir:\t" + WheelDirection.get(this.getShortFromHexString(10, hexString)) + "\n");
