@@ -39,8 +39,10 @@ public class Rovio extends Authenticator {
 		// Create the Rovio
 		try {
 			myRovio = new Rovio("192.168.10.18", "admin", "cs3630");
-			System.out.println(myRovio.parseRespCode(myRovio.doCommand(CommandString.DRIVE_HEAD_DOWN)));
-			myRovio.prettyPrintMCU(myRovio.doCommand(CommandString.GET_MCU_REPORT));
+//			myRovio.doCommandAndPrint(Command.REBOOT);
+			System.out.println(myRovio.parseRespCode(myRovio.doCommand(Command.DRIVE_HEAD_DOWN)));
+			myRovio.prettyPrintMCU(myRovio.doCommand(Command.GET_MCU_REPORT));
+			myRovio.rotationTest();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -65,7 +67,7 @@ public class Rovio extends Authenticator {
 		
 	}
 
-	public String doCommand(CommandString command) throws IOException {
+	public String doCommand(Command command) throws IOException {
 		
 		String response;
 		
@@ -86,7 +88,7 @@ public class Rovio extends Authenticator {
 		
 	}
 	
-	public String doCommandAndPrint(CommandString command) throws IOException {
+	public String doCommandAndPrint(Command command) throws IOException {
 		
 		String response = this.doCommand(command);
 		System.out.println(response);
@@ -168,23 +170,23 @@ public class Rovio extends Authenticator {
 	public void rotationExcercise() throws Exception {
 		
 		int numCmds = 10;							// number of commands to send
-		doCommand(CommandString.GET_MCU_REPORT);	// getting an MCU report clears Rovio encoder counters 
+		doCommand(Command.GET_MCU_REPORT);	// getting an MCU report clears Rovio encoder counters 
 		shortPause();								// pause after sending to allow processing time
 		System.out.println("Starting rotation excercise (right), sending " + numCmds + " commands...");
 		for(int i = numCmds; i > 0; i--) {
-			doCommand(CommandString.DRIVE_ROTATE_RIGHT);
+			doCommand(Command.DRIVE_ROTATE_RIGHT);
 			shortPause();
 		}
-		prettyPrintMCU(doCommand(CommandString.GET_MCU_REPORT));
+		prettyPrintMCU(doCommand(Command.GET_MCU_REPORT));
 		longPause();								// pause for a long time to allow Rovio to 'settle'
-		doCommand(CommandString.GET_MCU_REPORT);
+		doCommand(Command.GET_MCU_REPORT);
 		System.out.println("Starting rotation excercise (right), sending " + numCmds + " commands...");
 		for(int i = numCmds; i > 0; i--) {
-			doCommand(CommandString.DRIVE_ROTATE_LEFT);
+			doCommand(Command.DRIVE_ROTATE_LEFT);
 			shortPause();
 		}
 		longPause();								// pause for a long time to allow Rovio to 'settle'
-		doCommand(CommandString.GET_MCU_REPORT);
+		doCommand(Command.GET_MCU_REPORT);
 		
 	}
 	
@@ -214,6 +216,34 @@ public class Rovio extends Authenticator {
 		
 		cmdResponse = cmdResponse.substring(cmdResponse.length() - 1);
 		return ResponseCode.get(Integer.parseInt(cmdResponse));
+	}
+	
+	public long turn(RotateDirection dir, long deg) {
+		
+		if(dir == RotateDirection.LEFT) {
+			
+		}
+		else {		// dir == RotateDirection.RIGHT
+			
+		}
+		return 0;
+		
+	}
+	
+	private void rotationTest() throws Exception {
+		
+		int i = 1;
+		
+		while(getWheelTicks(Wheel.LEFT, (doCommandAndPrint(Command.GET_MCU_REPORT))) < 1){
+			for(int j = 0; j < i; j++) {
+				doCommand(Command.DRIVE_ROTATE_LEFT);
+				shortPause();
+			}
+			longPause();
+			i++;
+		}
+		System.out.println("Getting a tick registration took " + i + " turn commands.");
+		
 	}
 	
 	public enum ResponseCode {
@@ -265,25 +295,25 @@ public class Rovio extends Authenticator {
 		
 	}
 	
-	public enum CommandString {
+	public enum Command {
 		GET_REPORT("rev.cgi?Cmd=nav&action=1"),
 		RESET_NAV_STATE_MACHINE("rev.cgi?Cmd=nav&action=17"),
-		DRIVE_STOP("rev.cgi?Cmd=nav&action=18&drive=0&speed=" + CommandString.speed),
-		DRIVE_FORWARD("rev.cgi?Cmd=nav&action=18&drive=1&speed=" + CommandString.speed),
-		DRIVE_BACKWARD("rev.cgi?Cmd=nav&action=18&drive=2&speed=" + CommandString.speed),
-		DRIVE_LEFT("rev.cgi?Cmd=nav&action=18&drive=3&speed=" + CommandString.speed),
-		DRIVE_RIGHT("rev.cgi?Cmd=nav&action=18&drive=4&speed=" + CommandString.speed),
-		DRIVE_ROTATE_LEFT("rev.cgi?Cmd=nav&action=18&drive=5&speed=" + Integer.toString(CommandString.speed)),
-		DRIVE_ROTATE_RIGHT("rev.cgi?Cmd=nav&action=18&drive=6&speed=" + CommandString.speed),
-		DRIVE_DIAG_FORWARD_LEFT("rev.cgi?Cmd=nav&action=18&drive=7&speed=" + CommandString.speed),
-		DRIVE_DIAG_FORWARD_RIGHT("rev.cgi?Cmd=nav&action=18&drive=8&speed=" + CommandString.speed),
-		DRIVE_DIAG_BACKWARD_LEFT("rev.cgi?Cmd=nav&action=18&drive=9&speed=" + CommandString.speed),
-		DRIVE_DIAG_BACKWARD_RIGHT("rev.cgi?Cmd=nav&action=18&drive=10&speed=" + CommandString.speed),
-		DRIVE_HEAD_UP("rev.cgi?Cmd=nav&action=18&drive=11&speed=" + CommandString.speed),
-		DRIVE_HEAD_DOWN("rev.cgi?Cmd=nav&action=18&drive=12&speed=" + CommandString.speed),
-		DRIVE_HEAD_MIDDLE("rev.cgi?Cmd=nav&action=18&drive=13&speed=" + CommandString.speed),
-		DRIVE_ROTATE_LEFT_20_DEGREES("rev.cgi?Cmd=nav&action=18&drive=17&speed=" + CommandString.speed),
-		DRIVE_ROTATE_RIGHT_20_DEGREES("rev.cgi?Cmd=nav&action=18&drive=18&speed=" + CommandString.speed),
+		DRIVE_STOP("rev.cgi?Cmd=nav&action=18&drive=0&speed=" + Command.speed),
+		DRIVE_FORWARD("rev.cgi?Cmd=nav&action=18&drive=1&speed=" + Command.speed),
+		DRIVE_BACKWARD("rev.cgi?Cmd=nav&action=18&drive=2&speed=" + Command.speed),
+		DRIVE_LEFT("rev.cgi?Cmd=nav&action=18&drive=3&speed=" + Command.speed),
+		DRIVE_RIGHT("rev.cgi?Cmd=nav&action=18&drive=4&speed=" + Command.speed),
+		DRIVE_ROTATE_LEFT("rev.cgi?Cmd=nav&action=18&drive=5&speed=" + Integer.toString(Command.speed)),
+		DRIVE_ROTATE_RIGHT("rev.cgi?Cmd=nav&action=18&drive=6&speed=" + Command.speed),
+		DRIVE_DIAG_FORWARD_LEFT("rev.cgi?Cmd=nav&action=18&drive=7&speed=" + Command.speed),
+		DRIVE_DIAG_FORWARD_RIGHT("rev.cgi?Cmd=nav&action=18&drive=8&speed=" + Command.speed),
+		DRIVE_DIAG_BACKWARD_LEFT("rev.cgi?Cmd=nav&action=18&drive=9&speed=" + Command.speed),
+		DRIVE_DIAG_BACKWARD_RIGHT("rev.cgi?Cmd=nav&action=18&drive=10&speed=" + Command.speed),
+		DRIVE_HEAD_UP("rev.cgi?Cmd=nav&action=18&drive=11&speed=" + Command.speed),
+		DRIVE_HEAD_DOWN("rev.cgi?Cmd=nav&action=18&drive=12&speed=" + Command.speed),
+		DRIVE_HEAD_MIDDLE("rev.cgi?Cmd=nav&action=18&drive=13&speed=" + Command.speed),
+		DRIVE_ROTATE_LEFT_20_DEGREES("rev.cgi?Cmd=nav&action=18&drive=17&speed=" + Command.speed),
+		DRIVE_ROTATE_RIGHT_20_DEGREES("rev.cgi?Cmd=nav&action=18&drive=18&speed=" + Command.speed),
 		GET_MCU_REPORT("rev.cgi?Cmd=nav&action=20"),
 		GET_TIME("GetTime.cgi"),
 		GET_STATUS("GetStatus.cgi"),
@@ -295,7 +325,7 @@ public class Rovio extends Authenticator {
 		private String command;
 		public static final int speed = 1;
 		
-		private CommandString(String command) {
+		private Command(String command) {
 			this.command = command;
 		}
 		
