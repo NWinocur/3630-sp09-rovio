@@ -39,6 +39,7 @@ public class Rovio extends Authenticator {
 		// Create the Rovio
 		try {
 			myRovio = new Rovio("192.168.10.18", "admin", "cs3630");
+			System.out.println(myRovio.parseRespCode(myRovio.doCommand(CommandString.DRIVE_HEAD_DOWN)));
 			myRovio.prettyPrintMCU(myRovio.doCommand(CommandString.GET_MCU_REPORT));
 		}
 		catch(Exception e) {
@@ -209,31 +210,59 @@ public class Rovio extends Authenticator {
 		Thread.sleep(longSleepAmountInMillis);
 	}
 	
+	private ResponseCode parseRespCode(String cmdResponse) {
+		
+		cmdResponse = cmdResponse.substring(cmdResponse.length() - 1);
+		return ResponseCode.get(Integer.parseInt(cmdResponse));
+	}
+	
 	public enum ResponseCode {
-		SUCCESS,
-		FAILURE,
-		ROBOT_BUSY,
-		FEATURE_NOT_IMPLEMENTED,
-		UNKNOWN_CGI_ACTION,
-		NO_NS_SIGNAL,
-		NO_EMPTY_PATH_AVAILABLE,
-		FAILED_TO_READ_PATH,
-		PATH_BASEADDRESS_NOT_INITIALIZED,
-		PATH_NOT_FOUND,
-		PATH_NAME_NOT_SPECIFIED,
-		NOT_RECORDING_PATH,
-		FLASH_NOT_INITIALIZED,
-		FAILED_TO_DELETE_PATH,
-		FAILED_TO_READ_FROM_FLASH,
-		FAILED_TO_WRITE_TO_FLASH,
-		FLASH_NOT_READY,
-		NO_MEMORY_AVAILABLE,
-		NO_MCU_PORT_AVAILABLE,
-		NO_NS_PORT_AVAILABLE,
-		NS_PACKET_CHECKSUM_ERROR,
-		NS_UART_READ_ERROR,
-		PARAMETER_OUTOFRANGE,
-		NO_PARAMETER
+		SUCCESS(0),
+		FAILURE(1),
+		ROBOT_BUSY(2),
+		FEATURE_NOT_IMPLEMENTED(3),
+		UNKNOWN_CGI_ACTION(4),
+		NO_NS_SIGNAL(5),
+		NO_EMPTY_PATH_AVAILABLE(6),
+		FAILED_TO_READ_PATH(7),
+		PATH_BASEADDRESS_NOT_INITIALIZED(8),
+		PATH_NOT_FOUND(9),
+		PATH_NAME_NOT_SPECIFIED(10),
+		NOT_RECORDING_PATH(11),
+		FLASH_NOT_INITIALIZED(12),
+		FAILED_TO_DELETE_PATH(13),
+		FAILED_TO_READ_FROM_FLASH(14),
+		FAILED_TO_WRITE_TO_FLASH(15),
+		FLASH_NOT_READY(16),
+		NO_MEMORY_AVAILABLE(17),
+		NO_MCU_PORT_AVAILABLE(18),
+		NO_NS_PORT_AVAILABLE(19),
+		NS_PACKET_CHECKSUM_ERROR(20),
+		NS_UART_READ_ERROR(21),
+		PARAMETER_OUTOFRANGE(22),
+		NO_PARAMETER(23);
+		
+		private int value;
+		private static final Map<Integer, ResponseCode> lookup = new HashMap<Integer, ResponseCode>();
+
+		static {
+			for(ResponseCode c : EnumSet.allOf(ResponseCode.class)) {
+				lookup.put(c.getValue(), c);
+			}
+		}
+		
+		private ResponseCode(int value) {
+			this.value = value;
+		}
+		
+		public int getValue() {
+			return value;
+		}
+		
+		public static ResponseCode get(int c) {
+			return lookup.get(c);
+		}
+		
 	}
 	
 	public enum CommandString {
@@ -322,5 +351,21 @@ public class Rovio extends Authenticator {
 		LEFT,
 		RIGHT,
 		BACK
+	}
+	
+	public enum DriveDirection {
+		FORWARD,
+		BACKWARD,
+		LEFT,
+		RIGHT,
+		DIAG_FORWARD_LEFT,
+		DIAG_FORWARD_RIGHT,
+		DIAG_BACKWARD_LEFT,
+		DIAG_BACKWARD_RIGHT
+	}
+	
+	public enum RotateDirection {
+		LEFT,
+		RIGHT
 	}
 }
