@@ -26,6 +26,8 @@ public class Rovio extends Authenticator {
 	private String username;
 	private String password;
 	private URL rovioBaseURL;
+	private final long sleepAmountInMillis = 200;
+	private final long longSleepAmountInMillis = 2000;
 	
 	/**
 	 * @param args
@@ -37,14 +39,7 @@ public class Rovio extends Authenticator {
 		// Create the Rovio
 		try {
 			myRovio = new Rovio("192.168.10.18", "admin", "cs3630");
-			// Ask Rovio to print a general report
-			myRovio.printReport();
-			// Ask Rovio to print an MCU report
-			myRovio.printMCUReport();
-			// Ask Rovio to exercise
-			myRovio.exerciseRovio();
-			// Print version
-			//myRovio.doCommand(CommandString.GET_VER);
+			myRovio.prettyPrintMCU(myRovio.doCommand(CommandString.GET_MCU_REPORT));
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -53,57 +48,24 @@ public class Rovio extends Authenticator {
 	}
 	
 	public Rovio(String ipAddress, String username, String password) throws MalformedURLException {
+		
 		this.ipAddress = ipAddress;
 		this.username = username;
 		this.password = password;
 		rovioBaseURL =new URL( "http://" + this.ipAddress + "/");
 		
 		Authenticator.setDefault(this);
+		
 	}
 	
 	protected PasswordAuthentication getPasswordAuthentication() {
+		
 		return new PasswordAuthentication(username, password.toCharArray());
-	}
-	
-	public void printReport() throws IOException {
 		
-		String response;
-
-		// Command to print a general report is: CommandString.GET_REPORT
-		URL commandURL = new URL(this.rovioBaseURL, CommandString.GET_REPORT.toString());
-		// Open an input stream using the command URL
-		BufferedReader responseReader = new BufferedReader(new InputStreamReader(commandURL.openStream()));
-		// Read the response from the input stream
-		response = responseReader.readLine();
-		// Print Rovio's response
-		while(response != null) {
-			System.out.println(response);
-			response = responseReader.readLine();
-		}
-		// Done with the stream
-		responseReader.close();
-	}
-	
-	public void printMCUReport() throws IOException {
-		
-		String response;
-		
-		// Command to print an MCU report is: CommandString.GET_MCU_REPORT
-		URL commandURL = new URL(this.rovioBaseURL, CommandString.GET_MCU_REPORT.toString());
-		// Open an input stream using the command URL
-		BufferedReader responseReader = new BufferedReader(new InputStreamReader(commandURL.openStream()));
-		// Read the response from the input stream
-		response = responseReader.readLine();
-		// Print Rovio's response
-		while(response != null) {
-			System.out.println(response);
-			response = responseReader.readLine();
-		}
-		// Done with the stream
-		responseReader.close();
 	}
 
 	public String doCommand(CommandString command) throws IOException {
+		
 		String response;
 		
 		// Build the command
@@ -116,14 +78,22 @@ public class Rovio extends Authenticator {
 		while(responseReader.ready()) {
 			response += "\n" + responseReader.readLine();
 		}
-		System.out.println(response);
 		// Done with the stream
 		responseReader.close();
 		
 		return response;
+		
 	}
 	
-	public byte getByteFromHexString(int offset, String hexString) throws Exception {
+	public String doCommandAndPrint(CommandString command) throws IOException {
+		
+		String response = this.doCommand(command);
+		System.out.println(response);
+		return response;
+		
+	}
+	
+	public short getShortFromHexString(int offset, String hexString) throws Exception {
 		
 		// A byte is represented with 2 hex digits, check to see if we have at least that many digits in the string
 		if(hexString.length() < 2) {
@@ -134,10 +104,10 @@ public class Rovio extends Authenticator {
 			throw new Exception("Invalid offset specified.");
 		}
 		hexString = hexString.substring(offset, offset + 2);
-		return Byte.parseByte(hexString, 16);
+		return Short.parseShort(hexString, 16);
 	}
 	
-	public short getShortFromHexString(int offset, String hexString) throws Exception {
+	public int getIntFromHexString(int offset, String hexString) throws Exception {
 		
 		// A short is represented with 4 hex digits, check to see if we have at least that many digits in the string
 		if(hexString.length() < 4) {
@@ -148,103 +118,93 @@ public class Rovio extends Authenticator {
 			throw new Exception("Invalid offset specified.");
 		}
 		hexString = hexString.substring(offset, offset + 4);
-		return Short.parseShort(hexString, 16);
+		return Integer.parseInt(hexString, 16);
 	}
 
 	public int getWheelTicks(Wheel w, String hexResponse) throws Exception {
 		
-		short ticks = 0;
+		int ticks = 0;
 		
 		if(w == Wheel.LEFT) {
-			ticks = getShortFromHexString(3, hexResponse);
+			ticks = getIntFromHexString(6, hexResponse);
 		}
 		else if(w == Wheel.RIGHT) {
-			ticks = getShortFromHexString(6, hexResponse);
+			ticks = getIntFromHexString(12, hexResponse);
 		}
 		else if(w == Wheel.BACK) {
-			ticks = getShortFromHexString(9, hexResponse);
+			ticks = getIntFromHexString(18, hexResponse);
 		}
 		
 		return ticks;
 	}
 	
-	public Direction getWheelDirection(Wheel w, String hexResponse) throws Exception {
-		// THIS IS A WORK IN PROGRESS.
-		byte dByte = 0;
-		Direction d = Direction.LEFT;
+	private String parseHex(String report) {
 		
-		if(w == Wheel.LEFT) {
-			dByte = this.getByteFromHexString(2, hexResponse);
-		}
-		else if(w == Wheel.RIGHT) {
-			dByte = this.getByteFromHexString(5, hexResponse);
-		}
-		else {	// w == Wheel.BACK
-			dByte = this.getByteFromHexString(8, hexResponse);
-		}
+		String hexString = report.substring(report.length() - 30);
+		return hexString;
 		
-		// Convert dByte to a direction... don't know yet how to convert, need to test.
-		// Direction corresponds to bit 2 of dByte.
-		// Maybe:
-		// d = Direction.get(dByte);
-		return d;
 	}
 	
-	public void exerciseRovio() throws IOException, InterruptedException {
+	public WheelDirection getWheelDir(Wheel w, String hexResponse) throws Exception {
+
+		WheelDirection d;
 		
-		// print an MCU report
-		System.out.println("MCU Report, Start Exercise:");
-		doCommand(CommandString.GET_MCU_REPORT);
-		// rotate left 20 degrees
-		System.out.println("Rotate Left 20 Degrees...");
-		doCommand(CommandString.DRIVE_ROTATE_LEFT_20_DEGREES);
-		Thread.sleep(2000);
-		// lift head up
-		System.out.println("Lift head up...");
-		doCommand(CommandString.DRIVE_HEAD_UP);
-		Thread.sleep(2000);
-		// rotate left 20 degrees
-		System.out.println("Rotate Left 20 Degrees...");
-		doCommand(CommandString.DRIVE_ROTATE_LEFT_20_DEGREES);
-		Thread.sleep(2000);
-		System.out.println("MCU Report, After Left Turn Series:");
-		doCommand(CommandString.GET_MCU_REPORT);
-		// put head down
-		System.out.println("Put head down...");
-		doCommand(CommandString.DRIVE_HEAD_DOWN);
-		Thread.sleep(2000);
-		// rotate right 20 degrees
-		System.out.println("Rotate Right 20 Degrees...");
-		doCommand(CommandString.DRIVE_ROTATE_RIGHT_20_DEGREES);
-		Thread.sleep(2000);
-		// lift head up
-		doCommand(CommandString.DRIVE_HEAD_UP);
-		// rotate right 20 degrees
-		System.out.println("Rotate Right 20 Degrees...");
-		doCommand(CommandString.DRIVE_ROTATE_RIGHT_20_DEGREES);
-		Thread.sleep(2000);
-		System.out.println("MCU Report, After Right Turn Series:");
-		doCommand(CommandString.GET_MCU_REPORT);
-		// put head down
-		System.out.println("Put head down...");
-		doCommand(CommandString.DRIVE_HEAD_DOWN);
-		Thread.sleep(2000);
-		// drive forward a bit
-		System.out.println("Driving forward...");
-		for(int i = 10; i > 0; i--) {
-			doCommand(CommandString.DRIVE_FORWARD);
-			Thread.sleep(100);
+		if(w == Wheel.LEFT) {
+			d = WheelDirection.get(this.getShortFromHexString(4, hexResponse));
 		}
-		System.out.println("MCU Report, After Driving Forward:");
-		doCommand(CommandString.GET_MCU_REPORT);
-		// drive backward a bit
-		System.out.println("Driving backward...");
-		for(int i = 10; i > 0; i--) {
-			doCommand(CommandString.DRIVE_BACKWARD);
-			Thread.sleep(100);
+		else if(w == Wheel.RIGHT) {
+			d = WheelDirection.get(this.getShortFromHexString(10, hexResponse));
 		}
-		System.out.println("MCU Report, After Driving Backward:");
+		else {	// w == Wheel.BACK
+			d = WheelDirection.get(this.getShortFromHexString(16, hexResponse));
+		}
+		return d;
+		
+	}
+	
+	public void rotationExcercise() throws Exception {
+		
+		int numCmds = 10;							// number of commands to send
+		doCommand(CommandString.GET_MCU_REPORT);	// getting an MCU report clears Rovio encoder counters 
+		shortPause();								// pause after sending to allow processing time
+		System.out.println("Starting rotation excercise (right), sending " + numCmds + " commands...");
+		for(int i = numCmds; i > 0; i--) {
+			doCommand(CommandString.DRIVE_ROTATE_RIGHT);
+			shortPause();
+		}
+		prettyPrintMCU(doCommand(CommandString.GET_MCU_REPORT));
+		longPause();								// pause for a long time to allow Rovio to 'settle'
 		doCommand(CommandString.GET_MCU_REPORT);
+		System.out.println("Starting rotation excercise (right), sending " + numCmds + " commands...");
+		for(int i = numCmds; i > 0; i--) {
+			doCommand(CommandString.DRIVE_ROTATE_LEFT);
+			shortPause();
+		}
+		longPause();								// pause for a long time to allow Rovio to 'settle'
+		doCommand(CommandString.GET_MCU_REPORT);
+		
+	}
+	
+	private void prettyPrintMCU(String report) throws Exception {
+
+		String hexString = this.parseHex(report);
+		System.out.print("Left Wh Rot Dir:\t" + WheelDirection.get(this.getShortFromHexString(4, hexString)) + "\n");
+		System.out.print("Left Wh Num Ticks:\t" + this.getIntFromHexString(6, hexString) + "\n");
+		System.out.print("Right Wh Rot Dir:\t" + WheelDirection.get(this.getShortFromHexString(10, hexString)) + "\n");
+		System.out.print("Right Wh Num Ticks:\t" + this.getIntFromHexString(12, hexString) + "\n");
+		System.out.print("Rear Wh Rot Dir:\t" + WheelDirection.get(this.getShortFromHexString(16, hexString)) + "\n");
+		System.out.print("Rear Wh Num Ticks:\t" + this.getIntFromHexString(18, hexString) + "\n");
+		System.out.print("Head Position:\t\t" + this.getShortFromHexString(24, hexString) + "\n");
+		System.out.print("Battery State:\t\t" + this.getShortFromHexString(26, hexString) + "\n");
+
+	}
+	
+	private void shortPause() throws InterruptedException {
+		Thread.sleep(sleepAmountInMillis);
+	}
+	
+	private void longPause() throws InterruptedException {
+		Thread.sleep(longSleepAmountInMillis);
 	}
 	
 	public enum ResponseCode {
@@ -282,7 +242,7 @@ public class Rovio extends Authenticator {
 		DRIVE_BACKWARD("rev.cgi?Cmd=nav&action=18&drive=2&speed=" + CommandString.speed),
 		DRIVE_LEFT("rev.cgi?Cmd=nav&action=18&drive=3&speed=" + CommandString.speed),
 		DRIVE_RIGHT("rev.cgi?Cmd=nav&action=18&drive=4&speed=" + CommandString.speed),
-		DRIVE_ROTATE_LEFT("rev.cgi?Cmd=nav&action=18&drive=5&speed=" + CommandString.speed),
+		DRIVE_ROTATE_LEFT("rev.cgi?Cmd=nav&action=18&drive=5&speed=" + Integer.toString(CommandString.speed)),
 		DRIVE_ROTATE_RIGHT("rev.cgi?Cmd=nav&action=18&drive=6&speed=" + CommandString.speed),
 		DRIVE_DIAG_FORWARD_LEFT("rev.cgi?Cmd=nav&action=18&drive=7&speed=" + CommandString.speed),
 		DRIVE_DIAG_FORWARD_RIGHT("rev.cgi?Cmd=nav&action=18&drive=8&speed=" + CommandString.speed),
@@ -302,7 +262,7 @@ public class Rovio extends Authenticator {
 		GET_DATA("GetData.cgi");
 		
 		private String command;
-		public static int speed = 1;
+		public static final int speed = 1;
 		
 		private CommandString(String command) {
 			this.command = command;
@@ -317,20 +277,21 @@ public class Rovio extends Authenticator {
 		}
 	}
 
-	public enum Direction {
-		LEFT(0),
-		RIGHT(1);
+	public enum WheelDirection {
+		NOCHANGE(0),
+		CLOCKWISE(2),
+		COUNTERCLOCKWISE(5);
 		
 		private int value;
-		private static final Map<Integer, Direction> lookup = new HashMap<Integer, Direction>();
+		private static final Map<Integer, WheelDirection> lookup = new HashMap<Integer, WheelDirection>();
 
 		static {
-			for(Direction d : EnumSet.allOf(Direction.class)) {
+			for(WheelDirection d : EnumSet.allOf(WheelDirection.class)) {
 				lookup.put(d.getValue(), d);
 			}
 		}
 		
-		private Direction(int value) {
+		private WheelDirection(int value) {
 			this.value = value;
 		}
 		
@@ -338,9 +299,21 @@ public class Rovio extends Authenticator {
 			return value;
 		}
 		
-		public static Direction get(int d) {
+		public static WheelDirection get(int d) {
 			return lookup.get(d);
 		}
+	}
+	
+	public enum HeadPosition {
+		HIGH,
+		MID,
+		LOW
+	}
+	
+	public enum BatteryState {
+		NORMAL,
+		NEED_CHARGE,
+		DEAD
 	}
 	
 	public enum Wheel {
