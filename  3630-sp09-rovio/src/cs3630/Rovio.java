@@ -29,6 +29,9 @@ public class Rovio extends Authenticator {
 	private final long sleepAmountInMillis = 200;
 	private final long longSleepAmountInMillis = 2000;
 	
+	private Thread[] threads;
+	private int numThreads;
+	
 	/**
 	 * @param args
 	 */
@@ -59,6 +62,23 @@ public class Rovio extends Authenticator {
 		
 		Authenticator.setDefault(this);
 		
+		numThreads = 0;
+		
+	}
+	
+	public void updateEncoderDataThread() {
+		
+	}
+	
+	public void updateEncoderData() {
+		if (numThreads < 10) {
+			threads[numThreads] = new Thread(new Runnable() {
+				public void run() {
+					updateEncoderDataThread();
+				}
+			});
+			numThreads++;
+		}
 	}
 	
 	protected PasswordAuthentication getPasswordAuthentication() {
