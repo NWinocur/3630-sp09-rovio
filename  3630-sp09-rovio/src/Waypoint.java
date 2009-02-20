@@ -46,5 +46,13 @@ public class Waypoint {
 		thetaPrime = thetaPrime * (-1);
 		return thetaPrime;
 	}
+
+	@Override
+    public String toString() {
+	return "X==" + Double.toString(x) + ", Y==" + Double.toString(y)
+		+ ", Theta==" + Double.toString(theta);
+    }
+	
+	
 	
 }

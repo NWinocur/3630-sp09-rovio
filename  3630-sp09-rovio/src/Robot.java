@@ -2,7 +2,7 @@ public class Robot extends RovioAPI {
 	
 	public static final double SPEED = 9;
 	public static final double TURN_SPEED = 9;
-	public static final double DISTANCE_SCALE = 1;
+	public static final double DISTANCE_SCALE = 50;
 	
 	public Robot(final RovioConnection connection) {
 		super(connection);
@@ -19,6 +19,9 @@ public class Robot extends RovioAPI {
 	at a constant speed given by SPEED */
 	public void drive(double distance) {
 		double messages = distance * DISTANCE_SCALE;
+		System.out
+				.println("Robot.java has been instructed to drive forward by sending "
+						+ distance + "*" + DISTANCE_SCALE + " messages");
 		for (int i = 0; i < messages; i++) {
 			super.manualDrive(RovioConstants.DriveType.FORWARD, (int)SPEED);
 		}
