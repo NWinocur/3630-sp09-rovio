@@ -51,8 +51,13 @@ public abstract class Controller {
 		while (ls.hasNextLine()) {
 			Scanner s = new Scanner(ls.nextLine());
 			s.useDelimiter(",");
-			Waypoint w = new Waypoint(s.nextDouble(), s.nextDouble(), s.nextDouble());
-			p.add(w);
+			try {
+				Waypoint w = new Waypoint(s.nextDouble(), s.nextDouble(), s.nextDouble());
+				p.add(w);
+			} catch (Exception e) {
+				System.out.println("input file is in the wrong format");
+				e.printStackTrace();
+			}
 		}
 		return path;
 	}
