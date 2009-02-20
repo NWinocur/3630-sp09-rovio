@@ -44,4 +44,17 @@ public abstract class Controller {
 		}
 	}
 	
+	/* loads coordinates from a text file and creates a path of waypoints */
+	public List<Waypoint> loadPathFromFile(String filename) {
+		List<Waypoint> path = new List<Waypoint>();
+		Scanner ls = new Scanner(new File(filename));
+		while (ls.hasNextLine()) {
+			Scanner s = new Scanner(ls.nextLine());
+			s.useDelimiter(",");
+			Waypoint w = new Waypoint(s.nextDouble(), s.nextDouble(), s.nextDouble());
+			p.add(w);
+		}
+		return path;
+	}
+	
 }
