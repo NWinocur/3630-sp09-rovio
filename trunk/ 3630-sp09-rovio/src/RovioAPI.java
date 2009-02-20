@@ -1,6 +1,6 @@
 import java.io.*;
 
-public class RovioAPI implements RovioConstants {
+public class RovioAPI implements RovioConstants, RovioAPIResponses {
 	private final RovioConnection connection;
 
 	public RovioAPI(final RovioConnection connection) {
@@ -28,5 +28,18 @@ public class RovioAPI implements RovioConstants {
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public MCUReport getMCUReport() {
+		final int action = 20;
+		
+		try {
+			InputStream in = getConnection().open(	"rev.cgi", "Cmd", "nav", "action", action);
+			return new MCUReport(in);
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 }
