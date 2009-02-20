@@ -22,7 +22,7 @@ public interface RovioAPIResponses {
 			}
 			
 			cmd = valueMap.get("Cmd");
-			response = valueMap.get("response");
+			response = valueMap.get("responses");
 		}		
 	}
 	
@@ -44,8 +44,8 @@ public interface RovioAPIResponses {
 
 			final String[] data = new String[response.length() / 2];
 			
-			for(int i = 0; i < data.length; i+= 2) {
-				data[i] = response.substring(i, i + 1);
+			for (int i = 0; i < data.length; i += 1) {
+				data[i] = response.substring((i * 2), (i * 2) + 1);
 			}
 			
 			leftDirection = WheelDirection.get(Byte.parseByte(data[2], 16));

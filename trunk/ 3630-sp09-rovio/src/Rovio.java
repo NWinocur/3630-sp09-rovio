@@ -1,17 +1,8 @@
 
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Authenticator;
-import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
-import java.net.URL;
 import java.net.URLEncoder;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author John Crawford
@@ -23,7 +14,7 @@ public class Rovio extends Authenticator implements RovioConstants, RovioAPIResp
 	private final long longSleepAmountInMillis = 2000;
 	
 	private final RovioAPI api;
-	private final EncoderTracker tracker;
+	// private final EncoderTracker tracker;
 	
 	/**
 	 * @param args
@@ -51,7 +42,7 @@ public class Rovio extends Authenticator implements RovioConstants, RovioAPIResp
 		
 		RovioAPI trackerAPI = new RovioAPI(new RovioConnection(ipAddress, username, password));
 		
-		tracker = new EncoderTracker(trackerAPI);
+		// tracker = new EncoderTracker(trackerAPI);
 	}	
 
 	public void rotationExcercise() throws Exception {
