@@ -41,6 +41,9 @@ public abstract class Planner {
 			angleToTurn = this.currentPosition.angleBetween(point.getTheta());
 			this.robot.turn(angleToTurn);
 		}
+		System.out.println("Planner.java just finished doing a DriveTo "
+				+ point.toString() + ", printing MCU report");
+		System.out.println(this.robot.getMCUReport().toString());
 	}
 	
 }
