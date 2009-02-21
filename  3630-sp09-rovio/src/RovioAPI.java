@@ -1,4 +1,5 @@
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class RovioAPI implements RovioConstants, RovioAPIResponses {
 	private final RovioConnection connection;
@@ -24,7 +25,7 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 		try {
 			InputStream in = getConnection().open(	"rev.cgi", "Cmd", "nav", "action", action,
 													"drive", typeValue, "speed", speed);
-			// TODO: Read the result from the stream.
+			System.out.println("TODO: Read the result from the stream.");
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
