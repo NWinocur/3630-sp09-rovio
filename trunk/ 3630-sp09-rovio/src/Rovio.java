@@ -10,11 +10,11 @@ import java.net.URLEncoder;
  */
 public class Rovio extends Authenticator implements RovioConstants, RovioAPIResponses {
 
-	private final long sleepAmountInMillis = 200;
+	private final long sleepAmountInMillis = 500;
 	private final long longSleepAmountInMillis = 2000;
 	
 	private final RovioAPI api;
-	// private final EncoderTracker tracker;
+	private final EncoderTracker tracker;
 	
 	/**
 	 * @param args
@@ -42,7 +42,7 @@ public class Rovio extends Authenticator implements RovioConstants, RovioAPIResp
 		
 		RovioAPI trackerAPI = new RovioAPI(new RovioConnection(ipAddress, username, password));
 		
-		// tracker = new EncoderTracker(trackerAPI);
+		tracker = new EncoderTracker(trackerAPI);
 	}	
 
 	public void rotationExcercise() throws Exception {
@@ -77,18 +77,12 @@ public class Rovio extends Authenticator implements RovioConstants, RovioAPIResp
 	
 	private void rotationTest() throws Exception {
 		
-		int i = 1;
-		
-		while(api.getMCUReport().getLeftTicks() < 1){
-			for(int j = 0; j < i; j++) {
-				api.manualDrive(DriveType.ROTATE_RIGHT_BY_20_DEGREES, Command.speed);
-				shortPause();
-			}
-			longPause();
-			i++;
+		while(true){
+			api.manualDrive(DriveType.ROTATE_RIGHT_BY_20_DEGREES, 2);
+			tracker.update();
+			System.out.println(tracker.getRearEncoder());
+			shortPause();
 		}
-		System.out.println("Getting a tick registration took " + i + " turn commands.");
-		
 	}
 	
 

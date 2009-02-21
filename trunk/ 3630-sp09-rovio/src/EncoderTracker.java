@@ -9,6 +9,8 @@ public class EncoderTracker implements RovioConstants {
 	
 	private final Thread taskThread;
 	private final EncoderTask task;
+	
+	private final Object notifyToken = new Object();
 
 	public EncoderTracker(RovioAPI api) {
 		this(api, true);
@@ -35,13 +37,16 @@ public class EncoderTracker implements RovioConstants {
 		public void run() {
 			while(true) {
 				if(useUpdate) {
-					try {
-						this.wait();
-					} catch(InterruptedException e) {
+					synchronized(notifyToken) {
+						try {
+							notifyToken.wait();
+						} catch(InterruptedException e) {
+						}
 					}
 				}
 
 				final RovioAPIResponses.MCUReport report = api.getMCUReport();
+				System.out.println(report);
 				leftEncoder += report.getLeftTicks() *
 						((report.getLeftDirection() == WheelDirection.CLOCKWISE) ? 1 : -1);
 				rightEncoder += report.getRightTicks() *
@@ -49,15 +54,17 @@ public class EncoderTracker implements RovioConstants {
 				rearEncoder += report.getRearTicks() *
 						((report.getRearDirection() == WheelDirection.CLOCKWISE) ? 1 : -1);
 				
-				try {
+/*				try {
 					Thread.sleep(time);
 				} catch(InterruptedException e) {
-				}
+				}*/
 			}
 		}
 		
 		public void update() {
-			this.notify();
+			synchronized(notifyToken) {
+				notifyToken.notify();
+			}
 		}
 	}
 
