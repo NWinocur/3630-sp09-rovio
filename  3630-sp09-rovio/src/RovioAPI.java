@@ -32,6 +32,27 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * Allows an angle to be specified.
+	 * Known angles are 45: 3, 90: 7, 135: 11, 180: 15.
+	 * @param type
+	 * @param speed
+	 * @param angle the angle to turn.
+	 */
+	public void manualDrive(final DriveType type, final int speed, final int angle) {
+		final int action = 18;
+		final int typeValue = type.ordinal();
+		try {
+			InputStream in = getConnection().open(	"rev.cgi", "Cmd", "nav", "action", action,
+													"drive", typeValue, "speed", speed, "angle", angle);
+			// TODO: Read the result from the stream.
+			
+			in.close();
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public MCUReport getMCUReport() {
 		final int action = 20;
