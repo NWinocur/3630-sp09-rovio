@@ -1,5 +1,5 @@
 
-public class EncoderTracker implements RovioConstants {
+public class MCUTracker implements RovioConstants {
 	private final RovioAPI api;
 	private final boolean useUpdate;
 
@@ -7,32 +7,40 @@ public class EncoderTracker implements RovioConstants {
 				rightEncoder,
 				rearEncoder;
 	
+	private boolean previousBarrierState = false;
+	private BarrierCallback barrierCallback = null;
+	
 	private final Thread taskThread;
-	private final EncoderTask task;
+	private final MCUTask task;
 	
 	private final Object notifyToken = new Object();
 
-	public EncoderTracker(RovioAPI api) {
+	public MCUTracker(RovioAPI api) {
 		this(api, true);
 	}
 
-	public EncoderTracker(RovioAPI api, boolean useUpdate) {
+	public MCUTracker(RovioAPI api, boolean useUpdate) {
 		this.api = api;
 		this.useUpdate = useUpdate;
 		
-		task = new EncoderTask();
+		task = new MCUTask();
 		taskThread = new Thread(task);
 		taskThread.setDaemon(true);
 		
 		taskThread.start();
 	}
 	
+	public static interface BarrierCallback {
+		
+		public void stateChanged(boolean barrierDetected);
+	}
+	
 	public void update() {
 		task.update();
 	}
 
-	private class EncoderTask implements Runnable {
-		private final int time = 200;
+	private class MCUTask implements Runnable {
+//		private final int time = 200;
 		
 		public void run() {
 			while(true) {
@@ -54,6 +62,13 @@ public class EncoderTracker implements RovioConstants {
 				rearEncoder += report.getRearTicks() *
 						((report.getRearDirection() == WheelDirection.CLOCKWISE) ? 1 : -1);
 				
+				if(report.isBarrierDetected() != previousBarrierState) {
+					previousBarrierState = report.isBarrierDetected();
+					if(barrierCallback != null) {
+						barrierCallback.stateChanged(report.isBarrierDetected());
+					}
+				}
+				
 /*				try {
 					Thread.sleep(time);
 				} catch(InterruptedException e) {
@@ -66,6 +81,10 @@ public class EncoderTracker implements RovioConstants {
 				notifyToken.notify();
 			}
 		}
+	}
+	
+	public void setBarrierCallback(BarrierCallback callback) {
+		this.barrierCallback = callback;
 	}
 
 	public int getLeftEncoder() {
