@@ -26,6 +26,8 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 			InputStream in = getConnection().open(	"rev.cgi", "Cmd", "nav", "action", action,
 													"drive", typeValue, "speed", speed);
 			System.out.println("TODO: Read the result from the stream.");
+			
+			in.close();
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
@@ -35,8 +37,10 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 		final int action = 20;
 		
 		try {
-			InputStream in = getConnection().open(	"rev.cgi", "Cmd", "nav", "action", action);
-			return new MCUReport(in);
+			final InputStream in = getConnection().open("rev.cgi", "Cmd", "nav", "action", action);
+			final MCUReport report = new MCUReport(in);
+			in.close();
+			return report;
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
