@@ -17,8 +17,6 @@ public class ConnectTheDots extends Planner {
 	/** control the robot to move to the next point in the plan */
 	public void makeMove() {
 		while (this.iterator.hasNext()) {
-			System.out
-					.println("ConnectTheDots.java is about to do super.driveTo(this.iterator.next())");
 			super.driveTo(this.iterator.next());
 		}
 	}
