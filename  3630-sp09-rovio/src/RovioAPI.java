@@ -92,4 +92,14 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 			e.printStackTrace();
 		}
 	}
+
+	public static void napTime(int millisToSleep) {
+		try {
+			Thread.sleep((long) millisToSleep);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
 }

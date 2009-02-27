@@ -4,6 +4,27 @@ public class Waypoint {
 	private double y;
 	private double theta;
 	
+	/**
+	 * @param x the x to set
+	 */
+	public void setX(double x) {
+		this.x = x;
+	}
+
+	/**
+	 * @param y the y to set
+	 */
+	public void setY(double y) {
+		this.y = y;
+	}
+
+	/**
+	 * @param theta the theta to set
+	 */
+	public void setTheta(double theta) {
+		this.theta = theta;
+	}
+
 	public Waypoint(double x, double y, double theta) {
 		this.x = x;
 		this.y = y;
@@ -42,8 +63,6 @@ public class Waypoint {
 		double dy = p.getY() - this.y;
 		double thetaPrime = Math.atan2(dy, dx);
 		thetaPrime = thetaPrime * (180 / Math.PI);
-		thetaPrime = thetaPrime - 90;
-		thetaPrime = thetaPrime * (-1);
 		return thetaPrime;
 	}
 

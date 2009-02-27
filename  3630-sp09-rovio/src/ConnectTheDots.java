@@ -11,10 +11,14 @@ public class ConnectTheDots extends Planner {
 		super(robot);
 		this.path = path;
 		this.iterator = this.path.listIterator();
-		this.currentPosition = this.iterator.next();
+		this.currentPosition = new Waypoint(0, 0, 90);
 	}
 	
-	/** control the robot to move to the next point in the plan */
+	/**
+	 * control the robot to move to the next point in the plan
+	 * 
+	 * @throws InterruptedException
+	 */
 	public void makeMove() {
 		while (this.iterator.hasNext()) {
 			System.out
