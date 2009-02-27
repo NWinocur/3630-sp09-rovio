@@ -22,12 +22,15 @@ public abstract class Controller {
 //		Planner p = new ConnectTheDots(r, path);
 //		p.makeMove();
 	}
-	
+
 	/**
-	* main method
-	* @param args command-line arguments
-	*/
-	public static void main(String[] args) {
+	 * main method
+	 * 
+	 * @param args
+	 *            command-line arguments
+	 * @throws InterruptedException
+	 */
+	public static void main(String[] args) throws InterruptedException {
 		//Controller.connectTheDots();
 		RovioConnection rc = new RovioConnection("192.168.10.18", "admin", "cs3630");
 		Robot r = new Robot(rc);
