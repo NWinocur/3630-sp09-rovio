@@ -3,7 +3,7 @@ public class Robot extends RovioAPI {
 	public static final double SPEED = 1;
 	public static final double TURN_SPEED = 5;
 	public static final double DISTANCE_SCALE = 20;
-	public static final int ANGLEPERMESSAGE = 03;// this int * 15deg =
+	/*public static final int ANGLEPERMESSAGE = 03;*/ // this int * 15deg =
 													// angle/turn
 	public static final int MILLISBETWEENTURNMESSAGES = 350 * ANGLEPERMESSAGE;
 	
@@ -11,7 +11,7 @@ public class Robot extends RovioAPI {
 		super(connection);
 	}
 	
-	public void turn(double amountToTurn) {
+	public int turn(double amountToTurn) {
 		// code to make robot turn
 		/*
 		 * URLs come out in a form like
@@ -22,31 +22,69 @@ public class Robot extends RovioAPI {
 		 * amount to turn is measured in degrees between -180.0 and 180.0 where
 		 * pos means to turn CCW and neg means to turn CW
 		 */
-		int messages = (int) Math
-				.round(amountToTurn / (15.0 * ANGLEPERMESSAGE));
-		System.out
-				.print("Robot.java has been instructed to turn by sending "
-				+ messages + " messages");
-		if (0 > amountToTurn) {
-			System.out.print(", a right turn");
-			for (int i = 0; i < Math.abs(messages); i++) {
-				super.manualDrive(
-						RovioConstants.DriveType.ROTATE_RIGHT_BY_20_DEGREES,
-						(int) TURN_SPEED, ANGLEPERMESSAGE);
-				RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
-				
-			}
+		int messages90 = 0;
+		int messages45 = 0;
+		int messages30 = 0;
+		int messages15 = 0;
+		RovioConstants.DriveType leftOrRight = RovioConstants.DriveType.ROTATE_RIGHT_BY_20_DEGREES;
+		if (amountToTurn < 0) {
+			leftOrRight = RovioConstants.DriveType.ROTATE_LEFT_BY_20_DEGREES;
 		}
-		else if (0 < amountToTurn) {
-			System.out.print(", a left turn");
-			for (int i = 0; i < Math.abs(messages); i++) {
-				super.manualDrive(
-						RovioConstants.DriveType.ROTATE_LEFT_BY_20_DEGREES,
-						(int) TURN_SPEED, ANGLEPERMESSAGE);
-				RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
-			}
+		System.out.print("Robot.turn(): amount to turn: " + amountToTurn);
+		amountToTurn = Math.abs(amountToTurn);
+		if (amountToTurn >= 90) {
+			messages90 = amountToTurn / 90;
+			amountToTurn = amountToTurn % 90;
+		}		
+		if (amountToTurn >= 45) {
+			messages45 = amountToTurn / 45;
+			amountToTurn = amountToTurn % 45;
 		}
-		System.out.println("...messages sent.");
+		if (amountToTurn >= 30) {
+			messages30 = amountToTurn / 30;
+			amountToTurn = amountToTurn % 30;
+		}
+		if (amountToTurn >= 15) {
+			messages15 = amountToTurn / 15;
+			amountToTurn = amountToTurn % 15;
+		}
+		/*for (int i = 0; i < Math.abs(messages); i++) {
+			super.manualDrive(
+					RovioConstants.DriveType.ROTATE_RIGHT_BY_20_DEGREES,
+					(int) TURN_SPEED, ANGLEPERMESSAGE);
+			RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+		}*/
+		System.out.println("turning (deg:numMessages): 90:" + messages90 + " 45:" +
+			messages45 + " 30:" + messages30 + " 15:" + messages15;
+		for (int i = 0; i < messages90; i++) {
+			super.manualDrive(
+					leftOrRight,
+					(int) TURN_SPEED, 7);
+			RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+		}
+		for (int i = 0; i < messages45; i++) {
+			super.manualDrive(
+					leftOrRight,
+					(int) TURN_SPEED, 3);
+			RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+		}
+		for (int i = 0; i < messages30; i++) {
+			super.manualDrive(
+					leftOrRight,
+					(int) TURN_SPEED, 2);
+			RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+		}
+		for (int i = 0; i < messages15; i++) {
+			super.manualDrive(
+					leftOrRight,
+					(int) TURN_SPEED, 1);
+			RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+		}
+		int amountTurned = messages90 + messages45 + messages30 + messages15;
+		if (leftOrRight == RovioConstants.DriveType.ROTATE_LEFT_BY_20_DEGREES) {
+			amountTurned = amountTurned * -1;
+		}
+		return amountTurned;
 	}
 	
 	
