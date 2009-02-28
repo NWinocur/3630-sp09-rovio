@@ -37,35 +37,43 @@ public abstract class Planner {
 			(goalPoint.getY() == currentPosition.getY()) &&
 			(goalPoint.getTheta() == currentPosition.getTheta())))
 		{
+			System.out.println("We are at " + currentPosition.toString()
+					+ " & were told DriveTo(" + goalPoint.toString() + ")");
 			// turn towards point
 			double thetaPrime = this.currentPosition.getThetaPrime(goalPoint);
 			double angleToTurn = this.currentPosition.angleBetween(thetaPrime);
 			amountTurned = this.robot.turn(angleToTurn);
 			currentPosition.setTheta(currentPosition.getTheta() + amountTurned); // did turn towards next
 													// waypoint, update theta
+			System.out
+					.println("Just turned to point towards goal, currentposition updated to "
+							+ currentPosition.toString());
 			RovioAPI.napTime(shortSleepAmountInMillis);
 			// drive to point
 			double hypot = this.currentPosition.distance(goalPoint);
+			System.out.println("Driving distance of " + hypot);
 			this.robot.drive(hypot);
-			currentPosition.setX(Math.cos((Math.PI / 180)
-					* currentPosition.getX())); // done driving, update xy
-												// coords
-			currentPosition.setY(Math.sin((Math.PI / 180)
-					* currentPosition.getY()));
+			currentPosition.setX(currentPosition.getX()
+					+ Math.cos(amountTurned * Math.PI / 180) * hypot); 
+			currentPosition.setY(currentPosition.getY()
+					+ Math.sin(amountTurned * Math.PI / 180) * hypot); 
+			System.out.println("Just drove, currently at "
+					+ currentPosition.toString());
 			RovioAPI.napTime(shortSleepAmountInMillis);
+
 			// turn towards final theta
 			angleToTurn = this.currentPosition.angleBetween(goalPoint.getTheta());
 			amountTurned = this.robot.turn(angleToTurn);
 			currentPosition.setTheta(currentPosition.getTheta() + amountTurned);// did turn towards goal
 														// theta, update theta
 			RovioAPI.napTime(longSleepAmountInMillis);
-			if (Math.abs(currentPosition.distance(goalPoint)) > 1) {
-				driveTo(goalPoint);
-			}
+			// if (Math.abs(currentPosition.distance(goalPoint)) > 1) {
+			// driveTo(goalPoint);
+			// }
 		}
 		System.out.println("Planner.java just finished doing a DriveTo "
 				+ goalPoint.toString() + ", printing MCU report");
-		System.out.println(this.robot.getMCUReport().toString());
+		System.out.println(this.robot.getMCUReport().toString() + "\n\n");
 	}
 	
 }
