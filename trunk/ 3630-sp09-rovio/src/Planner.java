@@ -39,16 +39,22 @@ public abstract class Planner {
 		{
 			System.out.println("We are at " + currentPosition.toString()
 					+ " & were told DriveTo(" + goalPoint.toString() + ")");
+			double angleToTurn;
 			// turn towards point
-			double thetaPrime = this.currentPosition.getThetaPrime(goalPoint);
-			double angleToTurn = this.currentPosition.angleBetween(thetaPrime);
-			amountTurned = this.robot.turn(angleToTurn);
-			currentPosition.setTheta(currentPosition.getTheta() + amountTurned); // did turn towards next
-													// waypoint, update theta
-			System.out
-					.println("Just turned to point towards goal, currentposition updated to "
-							+ currentPosition.toString());
-			RovioAPI.napTime(shortSleepAmountInMillis);
+			if (currentPosition.distance(goalPoint) > 0.01) {
+				double thetaPrime = this.currentPosition
+						.getThetaPrime(goalPoint);
+				angleToTurn = this.currentPosition
+						.angleBetween(thetaPrime);
+				amountTurned = this.robot.turn(angleToTurn);
+				currentPosition.setTheta(currentPosition.getTheta()
+						+ amountTurned); // did turn towards next
+				// waypoint, update theta
+				System.out
+						.println("Just turned to point towards goal, currentposition updated to "
+								+ currentPosition.toString());
+				RovioAPI.napTime(shortSleepAmountInMillis);
+			}
 			// drive to point
 			double hypot = this.currentPosition.distance(goalPoint);
 			System.out.println("Driving distance of " + hypot);
