@@ -2,7 +2,7 @@ public class Robot extends RovioAPI {
 
 	public static final double SPEED = 1;
 	public static final double TURN_SPEED = 5;
-	public static final double DISTANCE_SCALE = 20;
+	public static final double DISTANCE_SCALE = 30.25;
 	public static int ANGLEPERMESSAGE = 01;// this int*15deg==angle/turn
 	public static int MILLISBETWEENTURNMESSAGES = 350 * ANGLEPERMESSAGE;
 	
