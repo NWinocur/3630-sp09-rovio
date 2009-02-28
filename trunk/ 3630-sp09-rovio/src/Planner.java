@@ -24,7 +24,7 @@ public abstract class Planner {
 	 * 
 	 * @throws InterruptedException
 	 */
-	protected void driveTo(Waypoint point) {
+	protected void driveTo(Waypoint goalPoint) {
 		/*
 		This method assumes that the robot class has the following methods:
 			turn(double amountToTurn)
@@ -33,36 +33,38 @@ public abstract class Planner {
 		*/
 		int amountTurned = 0;
 		// check if already at point: if so, do nothing
-		if (!((point.getX() == currentPosition.getX()) &&
-			(point.getY() == currentPosition.getY()) &&
-			(point.getTheta() == currentPosition.getTheta())))
+		if (!((goalPoint.getX() == currentPosition.getX()) &&
+			(goalPoint.getY() == currentPosition.getY()) &&
+			(goalPoint.getTheta() == currentPosition.getTheta())))
 		{
 			// turn towards point
-			double thetaPrime = this.currentPosition.getThetaPrime(point);
+			double thetaPrime = this.currentPosition.getThetaPrime(goalPoint);
 			double angleToTurn = this.currentPosition.angleBetween(thetaPrime);
-			amountturned = this.robot.turn(angleToTurn);
+			amountTurned = this.robot.turn(angleToTurn);
 			currentPosition.setTheta(currentPosition.getTheta() + amountTurned); // did turn towards next
 													// waypoint, update theta
 			RovioAPI.napTime(shortSleepAmountInMillis);
 			// drive to point
-			double hypot = this.currentPosition.distance(point);
+			double hypot = this.currentPosition.distance(goalPoint);
 			this.robot.drive(hypot);
-			currentPosition.setX(cos((Math.pi/180)*currentPosition.getX())); // done driving, update xy
+			currentPosition.setX(Math.cos((Math.PI / 180)
+					* currentPosition.getX())); // done driving, update xy
 												// coords
-			currentPosition.setY(sin((Math.pi/180)*currentPosition.getX()));
+			currentPosition.setY(Math.sin((Math.PI / 180)
+					* currentPosition.getY()));
 			RovioAPI.napTime(shortSleepAmountInMillis);
 			// turn towards final theta
-			angleToTurn = this.currentPosition.angleBetween(point.getTheta());
+			angleToTurn = this.currentPosition.angleBetween(goalPoint.getTheta());
 			amountTurned = this.robot.turn(angleToTurn);
 			currentPosition.setTheta(currentPosition.getTheta() + amountTurned);// did turn towards goal
 														// theta, update theta
 			RovioAPI.napTime(longSleepAmountInMillis);
-			if (Math.abs(currentPosition.distance(point)) > 1) {
-				driveTo(point);
+			if (Math.abs(currentPosition.distance(goalPoint)) > 1) {
+				driveTo(goalPoint);
 			}
 		}
 		System.out.println("Planner.java just finished doing a DriveTo "
-				+ point.toString() + ", printing MCU report");
+				+ goalPoint.toString() + ", printing MCU report");
 		System.out.println(this.robot.getMCUReport().toString());
 	}
 	
