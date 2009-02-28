@@ -24,7 +24,7 @@ public class Robot extends RovioAPI {
 		int messages90 = 0, messages45 = 0, messages30 = 0, messages15 = 0;
 		
 		RovioConstants.DriveType leftOrRight = RovioConstants.DriveType.ROTATE_RIGHT_BY_20_DEGREES;
-		if (amountToTurn < 0) {
+		if (0 < amountToTurn) {
 			leftOrRight = RovioConstants.DriveType.ROTATE_LEFT_BY_20_DEGREES;	
 		}
 		
@@ -82,7 +82,7 @@ public class Robot extends RovioAPI {
 		}
 		int amountTurned = messages90 * 90 + messages45 * 45 + messages30 * 30
 				+ messages15 * 15;
-		if (leftOrRight == RovioConstants.DriveType.ROTATE_LEFT_BY_20_DEGREES) {
+		if (leftOrRight == RovioConstants.DriveType.ROTATE_RIGHT_BY_20_DEGREES) {
 			amountTurned = amountTurned * -1;
 		}
 		return amountTurned;
