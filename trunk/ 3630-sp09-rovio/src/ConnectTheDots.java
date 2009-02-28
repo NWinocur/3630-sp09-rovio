@@ -21,8 +21,7 @@ public class ConnectTheDots extends Planner {
 	 */
 	public void makeMove() {
 		while (this.iterator.hasNext()) {
-			System.out
-					.println("ConnectTheDots.java is about to do super.driveTo(this.iterator.next())");
+			// System.out.println("ConnectTheDots.java is about to do super.driveTo(this.iterator.next())");
 			super.driveTo(this.iterator.next());
 		}
 	}
