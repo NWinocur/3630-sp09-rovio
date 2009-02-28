@@ -8,8 +8,8 @@ public abstract class Planner {
 	protected Robot robot;
 	/** current x, y, and theta of the robot */
 	protected Waypoint currentPosition;
-	private final int shortSleepAmountInMillis = 5000;
-	private final int longSleepAmountInMillis = 7500;
+	private final int shortSleepAmountInMillis = 2000;
+	private final int longSleepAmountInMillis = 7000;
 	
 	
 	public Planner(Robot robot) {
@@ -54,9 +54,11 @@ public abstract class Planner {
 			System.out.println("Driving distance of " + hypot);
 			this.robot.drive(hypot);
 			currentPosition.setX(currentPosition.getX()
-					+ Math.cos(amountTurned * Math.PI / 180) * hypot); 
+					+ Math.cos(currentPosition.getTheta() * Math.PI / 180)
+					* hypot); 
 			currentPosition.setY(currentPosition.getY()
-					+ Math.sin(amountTurned * Math.PI / 180) * hypot); 
+					+ Math.sin(currentPosition.getTheta() * Math.PI / 180)
+					* hypot); 
 			System.out.println("Just drove, currently at "
 					+ currentPosition.toString());
 			RovioAPI.napTime(shortSleepAmountInMillis);
@@ -67,9 +69,9 @@ public abstract class Planner {
 			currentPosition.setTheta(currentPosition.getTheta() + amountTurned);// did turn towards goal
 														// theta, update theta
 			RovioAPI.napTime(longSleepAmountInMillis);
-			// if (Math.abs(currentPosition.distance(goalPoint)) > 1) {
-			// driveTo(goalPoint);
-			// }
+			 if (Math.abs(currentPosition.distance(goalPoint)) > 0.1) {
+				driveTo(goalPoint);
+			}
 		}
 		System.out.println("Planner.java just finished doing a DriveTo "
 				+ goalPoint.toString() + ", printing MCU report");
