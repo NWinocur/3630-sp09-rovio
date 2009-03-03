@@ -30,21 +30,22 @@ public class Robot extends RovioAPI {
 		
 		System.out.print("Robot.turn(): amount to turn: " + amountToTurn);
 		amountToTurn = Math.abs(amountToTurn);
-		if (amountToTurn >= 90) {
-			messages90 = (int) (amountToTurn / 90);
-			amountToTurn = amountToTurn % 90;
+		long roundedAmountToTurn = Math.round(amountToTurn);
+		if (roundedAmountToTurn >= 90) {
+			messages90 = (int) (roundedAmountToTurn / 90);
+			roundedAmountToTurn = roundedAmountToTurn % 90;
 		}		
-		if (amountToTurn >= 45) {
-			messages45 = (int) (amountToTurn / 45);
-			amountToTurn = amountToTurn % 45;
+		if (roundedAmountToTurn >= 45) {
+			messages45 = (int) (roundedAmountToTurn / 45);
+			roundedAmountToTurn = roundedAmountToTurn % 45;
 		}
-		if (amountToTurn >= 30) {
-			messages30 = (int) (amountToTurn / 30);
-			amountToTurn = amountToTurn % 30;
+		if (roundedAmountToTurn >= 30) {
+			messages30 = (int) (roundedAmountToTurn / 30);
+			roundedAmountToTurn = roundedAmountToTurn % 30;
 		}
-		if (amountToTurn >= 15) {
-			messages15 = (int) (amountToTurn / 15);
-			amountToTurn = amountToTurn % 15;
+		if (roundedAmountToTurn >= 15) {
+			messages15 = (int) (roundedAmountToTurn / 15);
+			roundedAmountToTurn = roundedAmountToTurn % 15;
 		}
 		/*for (int i = 0; i < Math.abs(messages); i++) {
 			super.manualDrive(
