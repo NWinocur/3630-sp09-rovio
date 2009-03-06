@@ -1,38 +1,41 @@
-/**
- * 
- */
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import javax.swing.*;
 
-/**
- * @author
- * 
- */
 public class ooPurtyColors extends Planner {
 
-	/**
-	 * @param robot
-	 */
+	public RovioConstants.CameraResolution cameraResolution;
+	public int cameraBrightness;
+	public RovioConstants.HeadPosition headPosition;
+	
+	/* use this to initialize the planner but do not have the robot start moving yet */
 	public ooPurtyColors(Robot robot) {
 		super(robot);
-		// TODO Auto-generated constructor stub
+		cameraResolution = RovioConstants.CameraResolution._320x240;
+		cameraBrightness = 6;
+		headPosition = RovioConstants.HeadPosition.LOW;
 	}
 
 	/*
-	 * (non-Javadoc)
+	 * use this to actually move, either by one iteration or the entire program
 	 * 
 	 * @see Planner#makeMove()
 	 */
 	@Override
 	public void makeMove() {
-		// TODO Auto-generated method stub
-
+		BufferedImage image = super.robot.whatDoISee(cameraResolution);
+		showImage(image);
 	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+	
+	public void showImage(Image image) {
+		ImageIcon icon = new ImageIcon(image);
+		/*JFrame f = new JFrame("image preview");
+		JPanel p = new JPanel();
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.getContentPane().add(p);
+		f.pack();
+		f.setVisible(true);*/
+		JOptionPane.showMessageDialog(null, icon);
 	}
 
 }
