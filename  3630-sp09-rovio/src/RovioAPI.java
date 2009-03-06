@@ -1,5 +1,8 @@
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+
+import javax.imageio.ImageIO;
 
 public class RovioAPI implements RovioConstants, RovioAPIResponses {
 	private final RovioConnection connection;
@@ -31,6 +34,21 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public BufferedImage whatDoISee(final CameraResolution desiredRes) {
+		try{
+			InputStream in = getConnection().open("ChangeResolution.cgi",
+					"ResType", desiredRes.ordinal());
+			BufferedImage buffImage = ImageIO.read(in);
+			in.close();
+			return buffImage;
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	/**
