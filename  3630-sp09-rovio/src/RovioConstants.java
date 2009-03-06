@@ -44,8 +44,8 @@ public interface RovioConstants {
 	
 	public static enum CameraResolution {
 		_176x144,
+		_352x288,
 		_320x240,
-		_352x240,
 		_640x480
 	}
 	
