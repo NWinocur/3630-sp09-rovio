@@ -38,8 +38,9 @@ public class RovioAPI implements RovioConstants, RovioAPIResponses {
 	
 	public BufferedImage whatDoISee(final CameraResolution desiredRes) {
 		try{
-			InputStream in = getConnection().open("ChangeResolution.cgi",
-					"ResType", desiredRes.ordinal());
+			System.out.println(desiredRes.ordinal());
+			getConnection().open("ChangeResolution.cgi", "ResType", desiredRes.ordinal());
+			InputStream in = getConnection().open("Jpeg/CamImg1337.jpg");
 			BufferedImage buffImage = ImageIO.read(in);
 			in.close();
 			return buffImage;

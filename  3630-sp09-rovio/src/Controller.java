@@ -39,6 +39,7 @@ public abstract class Controller {
 	 */
 	public static void main(String[] args) throws InterruptedException {
 		RovioConnection rc = new RovioConnection("192.168.10.18", "admin", "cs3630");
+		System.out.println("connection established and authenticated");
 		Robot r = new Robot(rc);
 		// Planner planDemonstration = connectTheDots(r);
 		Planner planDemonstration = ooPurtyColors(r);

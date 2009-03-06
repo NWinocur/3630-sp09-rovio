@@ -1,5 +1,10 @@
-import java.net.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Authenticator;
+import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * Provides basic interactions with the Rovio's web server.
@@ -49,6 +54,7 @@ public class RovioConnection {
 	 * @throws IOException if the connection fails.
 	 */
 	public static InputStream open(URL url) throws IOException {
+		// System.out.println(url.toString());
 		URLConnection connection = url.openConnection();
 				
 		connection.connect();
