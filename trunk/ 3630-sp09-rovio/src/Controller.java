@@ -14,13 +14,20 @@ import javax.swing.JFileChooser;
 */
 public abstract class Controller {
 	
-	public static void connectTheDots() {
-//		Robot r = new Robot();
-//		List<Waypoint> path = new List<Waypoint>();
-//		// fill path from text file (or call a method in ConnectTheDots to do this)
-//		//////////////////////////////////////////////// FIX THIS
-//		Planner p = new ConnectTheDots(r, path);
-//		p.makeMove();
+	public static Planner connectTheDots(Robot r) {
+		JFileChooser letsChooseAFile = new JFileChooser(
+				"C:\\Documents and Settings");
+		letsChooseAFile.showOpenDialog(null);
+		List pathToTake = Controller.loadPathFromFile(letsChooseAFile
+				.getSelectedFile());
+		ConnectTheDots ctdDemo = new ConnectTheDots(r, pathToTake);
+		return ctdDemo;
+	}
+	
+	public static Planner ooPurtyColors(Robot r)
+	{
+		ooPurtyColors toReturn = new ooPurtyColors(r);
+		return toReturn;
 	}
 
 	/**
@@ -31,18 +38,14 @@ public abstract class Controller {
 	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws InterruptedException {
-		//Controller.connectTheDots();
 		RovioConnection rc = new RovioConnection("192.168.10.18", "admin", "cs3630");
 		Robot r = new Robot(rc);
-		JFileChooser letsChooseAFile = new JFileChooser(
-				"C:\\Documents and Settings");
-		letsChooseAFile.showOpenDialog(null);
-		List pathToTake = Controller.loadPathFromFile(letsChooseAFile
-				.getSelectedFile());
-		ConnectTheDots ctdDemo = new ConnectTheDots(r, pathToTake);
+		// Planner planDemonstration = connectTheDots(r);
+		Planner planDemonstration = ooPurtyColors(r);
 		while (true) {
-			ctdDemo.makeMove();
+			planDemonstration.makeMove();
 		}
+
 		
 	/*
 	 * try { // Query the robot's status //InputStream in; // URL url = new
