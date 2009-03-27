@@ -36,6 +36,9 @@ public class ooPurtyColors extends Planner {
 		BufferedImage rawImage[] = burstFire(burstLength);
 		BufferedImage noiseReduced = reduceNoise(rawImage);
 		showImage(noiseReduced);
+		BufferedImage interestingPoints = convolveBuffWithKernel(noiseReduced,
+				horizLineDetect);
+		showImage(interestingPoints);
 		
 		// segment image
 		// image description (features)
@@ -116,16 +119,21 @@ public class ooPurtyColors extends Planner {
 		// toReturn.setData(ourConvolver.filter(sourceImage.getRaster(), null));
 		return toReturn;
 	}
-
-	public void showImage(Image image) {
-		ImageIcon icon = new ImageIcon(image);
-		/*JFrame f = new JFrame("image preview");
-		JPanel p = new JPanel();
-		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		f.getContentPane().add(p);
-		f.pack();
-		f.setVisible(true);*/
-		JOptionPane.showMessageDialog(null, icon);
+	
+	public void showImage(final Image image) {
+		Thread t = new Thread(new Runnable() {
+			public void run() {
+				ImageIcon icon = new ImageIcon(image);
+				/*
+				 * JFrame f = new JFrame("image preview"); JPanel p = new
+				 * JPanel(); f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				 * f.getContentPane().add(p); f.pack(); f.setVisible(true);
+				 */
+				JOptionPane.showMessageDialog(null, icon);
+			}
+		});
+		
+		t.start();
 	}
 
 }
