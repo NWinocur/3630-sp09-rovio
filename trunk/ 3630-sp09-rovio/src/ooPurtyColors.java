@@ -17,6 +17,13 @@ public class ooPurtyColors extends Planner {
 	public final float[] horizLineDetect = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
 	public final float[] interestPointDetector = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
+	public final float[] blur1 = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+	public final float[] blur2 = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
+	public final float[] edgeDetect1 = { -5, -5, -5, -5, 39, -5, -5, -5, -5 };
+	public final float[] edgeDetect2Laplacian = { 0, 1, 0, 1, -4, 1, 0, 1, 0 };
+	public final float[] edgeDetect3Laplacian = { -1, -1, -1, -1, 8, -1, -1,
+			-1, -1 };
+	public final float[] emboss = { -1, -1, 0, -1, 0, 1, 0, 1, 1 };
 	
 	/* use this to initialize the planner but do not have the robot start moving yet */
 	public ooPurtyColors(Robot robot) {
@@ -35,18 +42,74 @@ public class ooPurtyColors extends Planner {
 	public void makeMove() {
 		BufferedImage rawImage[] = burstFire(burstLength);
 		BufferedImage noiseReduced = reduceNoise(rawImage);
-		showImage(noiseReduced);
-		BufferedImage interestingPoints = convolveBuffWithKernel(noiseReduced,
-				horizLineDetect);
-		showImage(interestingPoints);
+		// showImage(noiseReduced);
+		BufferedImage colorFiltered = color_filter(noiseReduced);
+		// showImageAndPauseUntilOkayed(colorFiltered);
 		
 		// segment image
 		// image description (features)
 		// recognition/extraction
+		
 	}
 	
+	// first attempt at coding this only gets red targets
+	private BufferedImage color_filter(BufferedImage noiseReduced) {
+		int imageWidth = noiseReduced.getWidth();
+		int imageHeight = noiseReduced.getHeight();
+
+		float notEnoughColorInfoThreshold = 140.0f;
+		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
+				BufferedImage.TYPE_INT_RGB);
+		
+		WritableRaster raster = toReturn.getRaster()
+				.createCompatibleWritableRaster();
+		
+		float[][] calculationArray = new float[imageWidth][imageHeight];
+		float maxForLaterNormalization = 0.0f;
+		
+		for (int y = 0; y < imageHeight; ++y) {
+
+			for (int x = 0; x < imageWidth; ++x) {
+				float r = noiseReduced.getRaster().getSample(x, y, 0);
+				float g = noiseReduced.getRaster().getSample(x, y, 1);
+				float b = noiseReduced.getRaster().getSample(x, y, 2);
+				maxForLaterNormalization = Math
+						.max(maxForLaterNormalization, r);
+				if (r <= notEnoughColorInfoThreshold)
+				{
+					r = 0;
+				}
+				else r = ((r - b) + (r - g));
+				calculationArray[x][y] = r;
+			}
+			
+		}
+		toReturn.setData(raster);
+		// showImageAndPauseUntilOkayed(toReturn);
+		
+		for (int y = 0; y < imageHeight; ++y) {
+			for (int x = 0; x < imageWidth; ++x) {
+				float r = calculationArray[x][y];
+				raster.setSample(x, y, 0, r);
+				raster.setSample(x, y, 1, 0);
+				raster.setSample(x, y, 2, 0);
+				
+			}
+		}
+		toReturn.setData(raster);
+		showImageAndPauseUntilOkayed(toReturn);		
+		
+		return toReturn;
+	}
+
 	private BufferedImage[] burstFire(int imagesToTake) {
 		BufferedImage imagesToReturn[] = new BufferedImage[imagesToTake];
+
+		super.robot.whatDoISee(cameraResolution);// this first take is PURPOSELY
+													// not being assigned
+													// anywhere; using it to
+													// throw out first image to
+													// reduce ghosting in avg
 		for (int n = 0; n < imagesToTake; n++){
 			imagesToReturn[n] = super.robot.whatDoISee(cameraResolution);
 			RovioAPI.napTime(5);
@@ -60,7 +123,8 @@ public class ooPurtyColors extends Planner {
 	}
 
 	private BufferedImage reduceNoise(BufferedImage rawImage) {
-		return rawImage;// making this a do-nothing method for now
+		return rawImage;// making this a do-nothing method for now, see method
+						// with same name that takes different parameters
 	}
 	
 	 public static BufferedImage average(BufferedImage[] images) {
@@ -134,6 +198,11 @@ public class ooPurtyColors extends Planner {
 		});
 		
 		t.start();
+	}
+	
+	public void showImageAndPauseUntilOkayed(final Image image) {
+		ImageIcon icon = new ImageIcon(image);
+		JOptionPane.showMessageDialog(null, icon);
 	}
 
 }
