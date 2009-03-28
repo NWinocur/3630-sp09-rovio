@@ -12,7 +12,7 @@ public class ooPurtyColors extends Planner {
 	static private void rgb2hsv(int r, int g, int b, int hsv[]) {
 		// method taken from
 		// http://www.f4.fhtw-berlin.de/~barthel/ImageJ/ColorInspector//HTMLHelp/farbraumJava.htm
-		
+
 		int min; // Min. value of RGB
 		int max; // Max. value of RGB
 		int delMax; // Delta RGB value
@@ -51,6 +51,8 @@ public class ooPurtyColors extends Planner {
 		hsv[1] = (int) (S * 100);
 		hsv[2] = (int) (V * 100);
 	}
+
+
 	public final float[] blur1 = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	public final float[] blur2 = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 	public final int burstLength = 4;
@@ -64,7 +66,7 @@ public class ooPurtyColors extends Planner {
 	public final float[] emboss = { -1, -1, 0, -1, 0, 1, 0, 1, 1 };
 	public RovioConstants.HeadPosition headPosition;
 	public final float[] horizLineDetect = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
-	
+
 	public final float[] interestPointDetector = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
 
@@ -75,7 +77,7 @@ public class ooPurtyColors extends Planner {
 		cameraBrightness = 6;
 		headPosition = RovioConstants.HeadPosition.LOW;
 	}
-	
+
 
 	public BufferedImage average(BufferedImage[] images) {
 
@@ -90,7 +92,7 @@ public class ooPurtyColors extends Planner {
 				BufferedImage.TYPE_INT_RGB);
 
 		WritableRaster raster = average.getRaster()
-				.createCompatibleWritableRaster();
+		.createCompatibleWritableRaster();
 
 		for (int y = 0; y < h; ++y)
 			for (int x = 0; x < w; ++x) {
@@ -114,42 +116,42 @@ public class ooPurtyColors extends Planner {
 
 		return average;
 	}
-	
+
 	private BufferedImage[] burstFire(int imagesToTake) {
 		BufferedImage imagesToReturn[] = new BufferedImage[imagesToTake];
 
 		super.robot.whatDoISee(cameraResolution);// this first take is PURPOSELY
-													// not being assigned
-													// anywhere; using it to
-													// throw out first image to
-													// reduce ghosting in avg
+		// not being assigned
+		// anywhere; using it to
+		// throw out first image to
+		// reduce ghosting in avg
 		for (int n = 0; n < imagesToTake; n++){
 			imagesToReturn[n] = super.robot.whatDoISee(cameraResolution);
 			RovioAPI.napTime(5);
 		}
 		return imagesToReturn;
-		
+
 	}
 
-	
+
 	private BufferedImage color_filter(BufferedImage noiseReduced) {
 		int imageWidth = noiseReduced.getWidth();
 		int imageHeight = noiseReduced.getHeight();
 
 		// float notEnoughColorInfoThreshold = 140.0f;
-		
+
 		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
 				BufferedImage.TYPE_INT_RGB);
-		
+
 		WritableRaster raster = toReturn.getRaster()
-				.createCompatibleWritableRaster();
-		
+		.createCompatibleWritableRaster();
+
 		double[][] hueArray = new double[imageWidth][imageHeight];
 		double[][] satArray = new double[imageWidth][imageHeight];
 		double maxHueYet = 0;
 		int wantHueThisClose = 10;
-		int targetHue = 120;
-		
+		int targetHue = 110;
+
 		for (int y = 0; y < imageHeight; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
@@ -158,7 +160,7 @@ public class ooPurtyColors extends Planner {
 				int b = noiseReduced.getRaster().getSample(x, y, 2);
 				int[] hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
-				
+
 				hueArray[x][y] = hsv[0];
 				satArray[x][y] = hsv[1];
 				if (wantHueThisClose > Math.abs(hueArray[x][y] - targetHue))
@@ -178,7 +180,7 @@ public class ooPurtyColors extends Planner {
 		toReturn.setData(raster);
 		return toReturn;
 	}
-	
+
 	// ASSUMES SQUARE KERNEL
 	private BufferedImage convolveBuffWithKernel(BufferedImage sourceImage,
 			float[] kArray) {
@@ -192,7 +194,7 @@ public class ooPurtyColors extends Planner {
 				ConvolveOp.EDGE_NO_OP, null);
 		BufferedImage toReturn = ourConvolver.createCompatibleDestImage(
 				cmModdedImage, null);
-		
+
 		toReturn = ourConvolver.filter(cmModdedImage, toReturn);
 		// toReturn.setData(ourConvolver.filter(sourceImage.getRaster(), null));
 		return toReturn;
@@ -210,22 +212,57 @@ public class ooPurtyColors extends Planner {
 		// showImage(noiseReduced);
 		BufferedImage colorFiltered = color_filter(noiseReduced);
 		showImageAndPauseUntilOkayed(colorFiltered);
-		BufferedImage lonePixelsGone = reduceNoise(colorFiltered);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
-		lonePixelsGone = reduceNoise(lonePixelsGone);
+
+		BufferedImage lonePixelsGone = killLonelyPixelsInTheBlackness(colorFiltered);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
 		showImageAndPauseUntilOkayed(lonePixelsGone);
+
+		int[][] cornerCoords = new int[4][2];
+		// 4 by 2 matrix of coordinates for each corner.
+		// first dimension of matrix is which pair:
+		// top left, top right, bottom left, bottom right.
+		// second dimension of matrix is x then y.
+
+		findCornerCoords(lonePixelsGone, cornerCoords);
+
+		BufferedImage cornersPaintedWhite = paintCornersWhite(lonePixelsGone,
+				cornerCoords);
 		
-		
-		
-/*
+		showImageAndPauseUntilOkayed(cornersPaintedWhite);
+
+
+
+
+		/*
 		 * BufferedImage edgesFoundByConvolving = convolveBuffWithKernel(
 		 * colorFiltered, edgeDetect1);
 		 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
@@ -236,39 +273,107 @@ public class ooPurtyColors extends Planner {
 		 * edgeDetect3Laplacian);
 		 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
 		 */
-		
+
 		// segment image
 		// image description (features)
 		// recognition/extraction
-		
+
 	}
-	
-	 private BufferedImage reduceNoise(BufferedImage rawImage) {
-		 int imageWidth = rawImage.getWidth();
-		 int imageHeight = rawImage.getHeight();
-		 
-			BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
+
+	private BufferedImage paintCornersWhite(BufferedImage lonePixelsGone,
+			int[][] cornerCoords) {
+		int imageWidth = lonePixelsGone.getWidth();
+		int imageHeight = lonePixelsGone.getHeight();
+		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
 				BufferedImage.TYPE_INT_RGB);
 
 		WritableRaster raster = toReturn.getRaster()
-				.createCompatibleWritableRaster();
-			
-		 for (int y = 1; y < imageHeight - 1; ++y) {
+		.createCompatibleWritableRaster();
+
+		for (int i = 0; i < 4; i++) {
+			int x = cornerCoords[i][0];
+			int y = cornerCoords[i][1];
+			raster.setSample(x, y, 0, 254);
+			raster.setSample(x, y, 1, 254);
+			raster.setSample(x, y, 2, 254);
+		}
+		toReturn.setData(raster);
+		return toReturn;
+	}
+
+	private void findCornerCoords(BufferedImage mostOrAllNoiseGone,
+			int[][] cornerCoords) {
+		int imageWidth = mostOrAllNoiseGone.getWidth();
+		int imageHeight = mostOrAllNoiseGone.getHeight();
+
+		// initialize corner coordinates to their opposites
+		// the imminent for loop should overwrite them with real answers,
+		// but initializing them prevents error it could get from fullblack img
+		cornerCoords[0][0] = imageWidth; //initialize topLeftX to imageWidth
+		cornerCoords[0][1] = imageHeight; //initialize topRightX to imageHeight
+		cornerCoords[1][0] = 0;// init topRightX
+		cornerCoords[1][1] = imageHeight;// init topRightY
+		cornerCoords[2][0] = imageWidth;// init bottomLeftX
+		cornerCoords[2][1] = 0;// init bottomLeftY
+		cornerCoords[3][0] = 0;//init bottomRightX
+		cornerCoords[3][1] = 0;//init bottomRightY
+
+		// initialize "best" scores to worst scores possible for overwriting
+		long topLeftScoreBest = euclideanDistance(0, 0, imageHeight, imageWidth);
+		long topRightScoreBest = topLeftScoreBest;
+		long bottomLeftScoreBest = topLeftScoreBest;
+		long bottomRightScoreBest = topLeftScoreBest;
+
+		for (int y = 1; y < imageHeight - 1; ++y) {
 			for (int x = 1; x < imageWidth - 1; ++x) {
-				int numBlankNeighbors = 0;
-				for (int suby = y - 1; suby <= y + 1; suby++)
-				{
-					for (int subx = x - 1; subx <= x + 1; subx++)
+				if (howLonelyAmI(mostOrAllNoiseGone, x, y) <= 7) {
+					long topLeftScoreHere, topRightScoreHere, bottomLeftScoreHere, bottomRightScoreHere;
+					if (topLeftScoreBest > (topLeftScoreHere = euclideanDistance(
+							0, 0, x, y)))
 					{
-						int rgbtot = rawImage.getRaster().getSample(subx, suby,
-								0)
-								+ rawImage.getRaster().getSample(subx, suby, 1)
-								+ rawImage.getRaster().getSample(subx, suby, 2);
-						if (rgbtot == 0)
-							numBlankNeighbors++;
+						topLeftScoreBest = topLeftScoreHere;
+						cornerCoords[0][0] = x;
+						cornerCoords[0][1] = y;
+					}
+					else if (topRightScoreBest > (topRightScoreHere = euclideanDistance(
+							imageWidth, 0, x, y))) {
+						topRightScoreBest = topRightScoreHere;
+						cornerCoords[1][0] = x;
+						cornerCoords[1][1] = y;
+					} else if (bottomLeftScoreBest > (bottomLeftScoreHere = euclideanDistance(
+							0, imageHeight, x, y))) {
+						bottomLeftScoreBest = bottomLeftScoreHere;
+						cornerCoords[2][0] = x;
+						cornerCoords[2][1] = y;
+					} else if (bottomRightScoreBest > (bottomRightScoreHere = euclideanDistance(
+							imageWidth, imageHeight, x, y))) {
+						bottomRightScoreBest = bottomRightScoreHere;
+						cornerCoords[3][0] = x;// init bottomRightX
+						cornerCoords[3][1] = y;
 					}
 				}
-				if (7 <= numBlankNeighbors) {
+			}
+		}
+	}
+
+	private long euclideanDistance(int i, int j, int x, int y) {
+		return Math.round(Math.sqrt((i - x) * (i - x) + (j - y) * (j - y)));
+	}
+
+
+	private BufferedImage killLonelyPixelsInTheBlackness(BufferedImage rawImage) {
+		int imageWidth = rawImage.getWidth();
+		int imageHeight = rawImage.getHeight();
+
+		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
+				BufferedImage.TYPE_INT_RGB);
+
+		WritableRaster raster = toReturn.getRaster()
+		.createCompatibleWritableRaster();
+
+		for (int y = 1; y < imageHeight - 1; ++y) {
+			for (int x = 1; x < imageWidth - 1; ++x) {
+				if (howLonelyAmI(rawImage, x, y) >= 6) {
 					raster.setSample(x, y, 0, 0);
 					raster.setSample(x, y, 1, 0);
 					raster.setSample(x, y, 2, 0);
@@ -279,19 +384,33 @@ public class ooPurtyColors extends Planner {
 							y, 1));
 					raster.setSample(x, y, 2, rawImage.getRaster().getSample(x,
 							y, 2));
-					
 				}
-
 			}
 		}
-		 toReturn.setData(raster);
-		 return toReturn;
+		toReturn.setData(raster);
+		return toReturn;
 	} 
+
+	private int howLonelyAmI(BufferedImage imageToCheck, int x, int y) {
+		// x and y passed here MUST be 0 > variable > image's max of that
+		// dimension
+		int numBlankNeighbors = 0;
+		for (int suby = y - 1; suby <= y + 1; suby++) {
+			for (int subx = x - 1; subx <= x + 1; subx++) {
+				int rgbtot = imageToCheck.getRaster().getSample(subx, suby, 0)
+				+ imageToCheck.getRaster().getSample(subx, suby, 1)
+						+ imageToCheck.getRaster().getSample(subx, suby, 2);
+				if (rgbtot == 0)
+					numBlankNeighbors++;
+			}
+		}
+		return numBlankNeighbors;
+	}
 
 	private BufferedImage reduceNoise(BufferedImage[] rawImage) {
 		return average(rawImage);
 	}
-	
+
 	public void showImage(final Image image) {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -304,10 +423,10 @@ public class ooPurtyColors extends Planner {
 				JOptionPane.showMessageDialog(null, icon);
 			}
 		});
-		
+
 		t.start();
 	}
-	
+
 	public void showImageAndPauseUntilOkayed(final Image image) {
 		ImageIcon icon = new ImageIcon(image);
 		JOptionPane.showMessageDialog(null, icon);
