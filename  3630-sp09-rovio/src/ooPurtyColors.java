@@ -411,6 +411,58 @@ public class ooPurtyColors extends Planner {
 		return average(rawImage);
 	}
 
+	/**
+	checks if a diagonal line between two opposite corners of a proposed
+		tradizoid mostly contains pixels of approximately the same color,
+		corner 2 must be right of corner 1 {(c2x >= c1x) must be true}
+	@param c1x x coordinate of corner 1
+	@param c1y y coordinate of corner 1
+	@param c2x x coordinate of corner 2
+	@param c2y y coordinate of corner 2
+	@param allowedExceptions the number of pixels allowed to be different along
+		the line
+	@param i the image
+	@param threshhold allowed difference in hue to be considered the same color
+	@return true if diagonal is mostly the same color as corners, false if c2x==c1x,
+		false otherwise
+	*/
+	public boolean isDiagonalOfTargetColor(int c1x, int c1y, int c2x, int c2y, int allowedExceptions, BufferedImage i, int threshhold) {
+			int dx = c2x - c1x;
+			int dy = c2y - c1y;
+			if (dx == 0) {
+				return false;
+			}
+			if (c2x < c1x) {
+				return false; // to avoid an infinite loop
+			}
+			double slope = ((double) dy) / dx;
+			int currentX = c1x;
+			int c1r = i.getRaster().getSample(c1x, c1y, 0);
+			int c1g = i.getRaster().getSample(c1x, c1y, 1);
+			int c1b = i.getRaster().getSample(c1x, c1y, 2);
+			int[] c1hsv = new int[3];
+			rgb2hsv(c1r, c1g, c1b, c1hsv);
+			int r, g, b, currentY;
+			int[] hsv;
+			int numExceptions = 0;
+			while (currentX < c2x && numExceptions <= allowedExceptions) {
+				currentY = (int) Math.round((slope * (currentX - c1x)) + c1y);
+				r = i.getRaster().getSample(currentX, currentY, 0);
+				g = i.getRaster().getSample(currentX, currentY, 1);
+				b = i.getRaster().getSample(currentX, currentY, 2);
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+				if (Math.abs(hsv[0] - c1hsv[0]) > threshhold) {
+					numExceptions++;
+				}
+				currentX++;
+			}
+			if (currentX == c2x && numExceptions <= allowedExceptions) {
+				return true;
+			}
+			return false;
+	}
+
 	public void showImage(final Image image) {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
