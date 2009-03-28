@@ -149,8 +149,9 @@ public class ooPurtyColors extends Planner {
 		double[][] hueArray = new double[imageWidth][imageHeight];
 		double[][] satArray = new double[imageWidth][imageHeight];
 		double maxHueYet = 0;
-		int wantHueThisClose = 10;
-		int targetHue = 110;
+		int wantHueThisClose = 20;
+		int targetHue = 20;
+		int minAcceptableSat = 30;
 
 		for (int y = 0; y < imageHeight; ++y) {
 
@@ -163,7 +164,8 @@ public class ooPurtyColors extends Planner {
 
 				hueArray[x][y] = hsv[0];
 				satArray[x][y] = hsv[1];
-				if (wantHueThisClose > Math.abs(hueArray[x][y] - targetHue))
+				if (wantHueThisClose > Math.abs(hueArray[x][y] - targetHue)
+						&& minAcceptableSat < satArray[x][y])
 				{
 					raster.setSample(x, y, 0, r);
 					raster.setSample(x, y, 1, g);
@@ -221,29 +223,8 @@ public class ooPurtyColors extends Planner {
 		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
 		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
 		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+
+
 		showImageAndPauseUntilOkayed(lonePixelsGone);
 
 		int[][] cornerCoords = new int[4][2];
@@ -296,7 +277,32 @@ public class ooPurtyColors extends Planner {
 			raster.setSample(x, y, 0, 254);
 			raster.setSample(x, y, 1, 254);
 			raster.setSample(x, y, 2, 254);
+			// System.out.println("Painting corner at X:" + x + ", Y:" + y);
 		}
+		
+		System.out.println("Slope of top line is "
+				+ ((double) (cornerCoords[0][1] - cornerCoords[1][1]))
+				/ ((double) (cornerCoords[0][0] - cornerCoords[1][0])));
+		System.out.println("Slope of bottom line is "
+				+ ((double) (cornerCoords[2][1] - cornerCoords[3][1]))
+				/ ((double) (cornerCoords[2][0] - cornerCoords[3][0])));
+		double a = euclideanDistance(cornerCoords[0][0], cornerCoords[0][1], cornerCoords[1][0], cornerCoords[1][1]);
+		double b = euclideanDistance(cornerCoords[1][0], cornerCoords[1][1], cornerCoords[2][0], cornerCoords[2][1]);
+		double c = euclideanDistance(cornerCoords[2][0], cornerCoords[2][1], cornerCoords[3][0], cornerCoords[3][1]);
+		double d = euclideanDistance(cornerCoords[3][0], cornerCoords[3][1],
+				cornerCoords[0][0], cornerCoords[0][1]);
+		double s = (a + b + c + d) / 2.0;
+		double p = euclideanDistance(cornerCoords[0][0], cornerCoords[0][1],
+				cornerCoords[2][0], cornerCoords[2][1]);
+		double q = euclideanDistance(cornerCoords[1][0], cornerCoords[1][1],
+				cornerCoords[3][0], cornerCoords[3][1]);
+		double K = Math.sqrt(4.0 * p * p * q * q
+				- ((double) (b * b + d * d - a * a - c * c) * (b * b + d * d
+						- a * a - c * c))) / 4.0;
+		System.out.println("a" + a + " b" + b + " c" + c + " d" + d + " q" + q
+				+ " p" + p);
+		System.out.println("Area is " + K);
+		
 		toReturn.setData(raster);
 		return toReturn;
 	}
