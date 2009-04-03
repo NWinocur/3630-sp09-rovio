@@ -248,9 +248,9 @@ public class ooPurtyColors extends Planner {
 							cornerCoords[1][1], 0.95, lonePixelsGone,
 									targetHueWindow));
 		
-			BufferedImage cornersPaintedWhite = paintCornersWhite(lonePixelsGone,
-					cornerCoords);
-			showImageAndPauseUntilOkayed(cornersPaintedWhite);
+			// BufferedImage cornersPaintedWhite =
+			// paintCornersWhite(lonePixelsGone, cornerCoords);
+			// showImageAndPauseUntilOkayed(cornersPaintedWhite);
 
 
 
@@ -272,6 +272,9 @@ public class ooPurtyColors extends Planner {
 			// recognition/extraction
 			
 			// drive closer to the goal
+
+			Waypoint currentPosEstimate = new Waypoint(0, 0, 90);
+			Waypoint finalGoal = new Waypoint(1, 0, 0);
 			finished = driveCloserToGoal(currentPosEstimate, finalGoal);
 		}
 	}
@@ -295,7 +298,7 @@ public class ooPurtyColors extends Planner {
 		method needs to be called again
 		*/
 		
-		int maxDistance = 10;
+		double maxDistance = 0.5;
 		
 		/* algorithm for driving strategy: "driving to goal"
 		if at goal
@@ -312,12 +315,12 @@ public class ooPurtyColors extends Planner {
 		
 		super.currentPosition = currentPos;
 		if (currentPos.distance(finalGoal) < 1) {
-			correctOrientation();
+			// correctOrientation();
 			return true;
 		}
-		if (currentPost.distance(finalGoal) <= maxDistance) {
+		if (currentPos.distance(finalGoal) <= maxDistance) {
 			driveTo(finalGoal);
-			correctOrientation();
+			// correctOrientation();
 			return true;
 		}
 		driveTo(pickPointOnWayToGoal(finalGoal, maxDistance));
@@ -325,14 +328,18 @@ public class ooPurtyColors extends Planner {
 	}
 	
 	/** picks a point on the way to the goal, but no more than maxDistance away */
-	private Waypoint pickPointOnWayToGoal(Waypoint finalGoal, int maxDistance) {
+	private Waypoint pickPointOnWayToGoal(Waypoint finalGoal, double maxDistance) {
 		// use similar triangles
 		double fd = super.currentPosition.distance(finalGoal);
-		double ratio = fd / maxDistance;
-		int dx = (int) ((finalGoal.getX() - super.currentPosition.getX()) * ratio);
-		int dy = (int) ((finalGoal.getY() - super.currentPosition.getY()) * ratio);
+		double ratio = maxDistance / fd;
+		System.out.println("pickPointOnWayToGoal is setting ratio of "
+				+ maxDistance + "/" + fd + "==" + maxDistance / fd);
+		double dx = ((finalGoal.getX() - super.currentPosition.getX()) * ratio);
+		double dy = ((finalGoal.getY() - super.currentPosition.getY()) * ratio);
 		Waypoint np = new Waypoint(super.currentPosition.getX() + dx,
 			super.currentPosition.getY() + dy, super.currentPosition.getTheta());
+		System.out
+				.println("pickPointOnWayToGoal is returning " + np.toString());
 		return np;
 	}
 
