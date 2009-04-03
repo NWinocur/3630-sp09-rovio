@@ -56,6 +56,12 @@ public class ooPurtyColors extends Planner {
 	public final float[] blur1 = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 	public final float[] blur2 = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 	public final int burstLength = 4;
+	public final int targetHue = 18; // target color. Red is ~18 in our normal
+										// meeting room
+	public final int targetHueWindow = 5; // how far from targetHue is
+											// acceptably close
+	public final int minSatToBeUseful = 30; // min sat to trust camera
+	
 
 	public int cameraBrightness;
 	public RovioConstants.CameraResolution cameraResolution;
@@ -148,10 +154,7 @@ public class ooPurtyColors extends Planner {
 
 		double[][] hueArray = new double[imageWidth][imageHeight];
 		double[][] satArray = new double[imageWidth][imageHeight];
-		double maxHueYet = 0;
-		int wantHueThisClose = 20;
-		int targetHue = 20;
-		int minAcceptableSat = 30;
+		// double maxHueYet = 0; // was intended for normalization
 
 		for (int y = 0; y < imageHeight; ++y) {
 
@@ -164,8 +167,8 @@ public class ooPurtyColors extends Planner {
 
 				hueArray[x][y] = hsv[0];
 				satArray[x][y] = hsv[1];
-				if (wantHueThisClose > Math.abs(hueArray[x][y] - targetHue)
-						&& minAcceptableSat < satArray[x][y])
+				if (targetHueWindow > Math.abs(hueArray[x][y] - targetHue)
+						&& minSatToBeUseful < satArray[x][y])
 				{
 					raster.setSample(x, y, 0, r);
 					raster.setSample(x, y, 1, g);
@@ -176,7 +179,7 @@ public class ooPurtyColors extends Planner {
 					raster.setSample(x, y, 1, 0);
 					raster.setSample(x, y, 2, 0);
 				}
-				maxHueYet = Math.max(maxHueYet, hueArray[x][y]);
+				// maxHueYet = Math.max(maxHueYet, hueArray[x][y]);
 			}
 		}
 		toReturn.setData(raster);
@@ -219,41 +222,48 @@ public class ooPurtyColors extends Planner {
 		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
 		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
 		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+
 
 
 		showImageAndPauseUntilOkayed(lonePixelsGone);
-
+		
+		
+		
 		int[][] cornerCoords = new int[4][2];
 		// 4 by 2 matrix of coordinates for each corner.
 		// first dimension of matrix is which pair:
 		// top left, top right, bottom left, bottom right.
 		// second dimension of matrix is x then y.
-
 		findCornerCoords(lonePixelsGone, cornerCoords);
-
+		System.out.println("Does diagonal seem to match hue? "
+				+ isDiagonalOfTargetColor(cornerCoords[0][0],
+						cornerCoords[0][1], cornerCoords[3][0],
+						cornerCoords[3][1], 0.95, lonePixelsGone,
+								targetHueWindow)
+				+ " and "
+				+ isDiagonalOfTargetColor(cornerCoords[2][0],
+						cornerCoords[2][1], cornerCoords[1][0],
+						cornerCoords[1][1], 0.95, lonePixelsGone,
+								targetHueWindow));
+		
 		BufferedImage cornersPaintedWhite = paintCornersWhite(lonePixelsGone,
 				cornerCoords);
-		
 		showImageAndPauseUntilOkayed(cornersPaintedWhite);
 
 
 
 
-		/*
-		 * BufferedImage edgesFoundByConvolving = convolveBuffWithKernel(
-		 * colorFiltered, edgeDetect1);
-		 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-		 * edgesFoundByConvolving = convolveBuffWithKernel( colorFiltered,
-		 * edgeDetect2Laplacian);
-		 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-		 * edgesFoundByConvolving = convolveBuffWithKernel( colorFiltered,
-		 * edgeDetect3Laplacian);
-		 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-		 */
+		
+		 BufferedImage edgesFoundByConvolving = convolveBuffWithKernel(
+				colorFiltered, edgeDetect1);
+		showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+		edgesFoundByConvolving = convolveBuffWithKernel(colorFiltered,
+				edgeDetect2Laplacian);
+		showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+		edgesFoundByConvolving = convolveBuffWithKernel(colorFiltered,
+				edgeDetect3Laplacian);
+		showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+		 
 
 		// segment image
 		// image description (features)
@@ -432,38 +442,39 @@ public class ooPurtyColors extends Planner {
 	@return true if diagonal is mostly the same color as corners, false if c2x==c1x,
 		false otherwise
 	*/
-	public boolean isDiagonalOfTargetColor(int c1x, int c1y, int c2x, int c2y, int allowedExceptions, BufferedImage i, int threshhold) {
+	public boolean isDiagonalOfTargetColor(int c1x, int c1y, int c2x, int c2y,
+			double maxPercentBad, BufferedImage i, int threshhold) {
 			int dx = c2x - c1x;
 			int dy = c2y - c1y;
 			if (dx == 0) {
+				// System.out.print("dx == 0");
 				return false;
 			}
 			if (c2x < c1x) {
+				// System.out.print("c2x < c1x");
 				return false; // to avoid an infinite loop
 			}
 			double slope = ((double) dy) / dx;
 			int currentX = c1x;
-			int c1r = i.getRaster().getSample(c1x, c1y, 0);
-			int c1g = i.getRaster().getSample(c1x, c1y, 1);
-			int c1b = i.getRaster().getSample(c1x, c1y, 2);
-			int[] c1hsv = new int[3];
-			rgb2hsv(c1r, c1g, c1b, c1hsv);
 			int r, g, b, currentY;
 			int[] hsv;
 			int numExceptions = 0;
-			while (currentX < c2x && numExceptions <= allowedExceptions) {
+			int pixelsTraversed = 0;
+			while (currentX < c2x) {
 				currentY = (int) Math.round((slope * (currentX - c1x)) + c1y);
 				r = i.getRaster().getSample(currentX, currentY, 0);
 				g = i.getRaster().getSample(currentX, currentY, 1);
 				b = i.getRaster().getSample(currentX, currentY, 2);
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
-				if (Math.abs(hsv[0] - c1hsv[0]) > threshhold) {
+				if (Math.abs(hsv[0] - targetHue) > threshhold) {
 					numExceptions++;
 				}
 				currentX++;
+				pixelsTraversed++;
 			}
-			if (currentX == c2x && numExceptions <= allowedExceptions) {
+			if (currentX == c2x
+				&& ((double) numExceptions) / pixelsTraversed <= maxPercentBad) {
 				return true;
 			}
 			return false;
