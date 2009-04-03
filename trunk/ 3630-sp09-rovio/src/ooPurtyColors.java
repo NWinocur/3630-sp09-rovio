@@ -9,7 +9,7 @@ import javax.swing.JOptionPane;
 
 public class ooPurtyColors extends Planner {
 
-	static private void rgb2hsv(int r, int g, int b, int hsv[]) {
+	static public void rgb2hsv(int r, int g, int b, int hsv[]) {
 		// method taken from
 		// http://www.f4.fhtw-berlin.de/~barthel/ImageJ/ColorInspector//HTMLHelp/farbraumJava.htm
 
