@@ -212,63 +212,128 @@ public class ooPurtyColors extends Planner {
 	 */
 	@Override
 	public void makeMove() {
-		BufferedImage rawImage[] = burstFire(burstLength);
-		BufferedImage noiseReduced = reduceNoise(rawImage);
-		// showImage(noiseReduced);
-		BufferedImage colorFiltered = color_filter(noiseReduced);
-		showImageAndPauseUntilOkayed(colorFiltered);
+		boolean finished = false;
+		while (finished == false) {
+			BufferedImage rawImage[] = burstFire(burstLength);
+			BufferedImage noiseReduced = reduceNoise(rawImage);
+			// showImage(noiseReduced);
+			BufferedImage colorFiltered = color_filter(noiseReduced);
+			showImageAndPauseUntilOkayed(colorFiltered);
 
-		BufferedImage lonePixelsGone = killLonelyPixelsInTheBlackness(colorFiltered);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
-		lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+			BufferedImage lonePixelsGone = killLonelyPixelsInTheBlackness(colorFiltered);
+			lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+			lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
+			lonePixelsGone = killLonelyPixelsInTheBlackness(lonePixelsGone);
 
 
 
-		showImageAndPauseUntilOkayed(lonePixelsGone);
+			showImageAndPauseUntilOkayed(lonePixelsGone);
 		
 		
 		
-		int[][] cornerCoords = new int[4][2];
-		// 4 by 2 matrix of coordinates for each corner.
-		// first dimension of matrix is which pair:
-		// top left, top right, bottom left, bottom right.
-		// second dimension of matrix is x then y.
-		findCornerCoords(lonePixelsGone, cornerCoords);
-		System.out.println("Does diagonal seem to match hue? "
-				+ isDiagonalOfTargetColor(cornerCoords[0][0],
-						cornerCoords[0][1], cornerCoords[3][0],
-						cornerCoords[3][1], 0.95, lonePixelsGone,
-								targetHueWindow)
-				+ " and "
-				+ isDiagonalOfTargetColor(cornerCoords[2][0],
-						cornerCoords[2][1], cornerCoords[1][0],
-						cornerCoords[1][1], 0.95, lonePixelsGone,
-								targetHueWindow));
+			int[][] cornerCoords = new int[4][2];
+			// 4 by 2 matrix of coordinates for each corner.
+			// first dimension of matrix is which pair:
+			// top left, top right, bottom left, bottom right.
+			// second dimension of matrix is x then y.
+			findCornerCoords(lonePixelsGone, cornerCoords);
+			System.out.println("Does diagonal seem to match hue? "
+					+ isDiagonalOfTargetColor(cornerCoords[0][0],
+							cornerCoords[0][1], cornerCoords[3][0],
+							cornerCoords[3][1], 0.95, lonePixelsGone,
+									targetHueWindow)
+					+ " and "
+					+ isDiagonalOfTargetColor(cornerCoords[2][0],
+							cornerCoords[2][1], cornerCoords[1][0],
+							cornerCoords[1][1], 0.95, lonePixelsGone,
+									targetHueWindow));
 		
-		BufferedImage cornersPaintedWhite = paintCornersWhite(lonePixelsGone,
-				cornerCoords);
-		showImageAndPauseUntilOkayed(cornersPaintedWhite);
+			BufferedImage cornersPaintedWhite = paintCornersWhite(lonePixelsGone,
+					cornerCoords);
+			showImageAndPauseUntilOkayed(cornersPaintedWhite);
 
 
 
 
 		
-		 BufferedImage edgesFoundByConvolving = convolveBuffWithKernel(
-				colorFiltered, edgeDetect1);
-		showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-		edgesFoundByConvolving = convolveBuffWithKernel(colorFiltered,
-				edgeDetect2Laplacian);
-		showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-		edgesFoundByConvolving = convolveBuffWithKernel(colorFiltered,
-				edgeDetect3Laplacian);
-		showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-		 
+			 BufferedImage edgesFoundByConvolving = convolveBuffWithKernel(
+					colorFiltered, edgeDetect1);
+			showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+			edgesFoundByConvolving = convolveBuffWithKernel(colorFiltered,
+					edgeDetect2Laplacian);
+			showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+			edgesFoundByConvolving = convolveBuffWithKernel(colorFiltered,
+					edgeDetect3Laplacian);
+			showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+			 
 
-		// segment image
-		// image description (features)
-		// recognition/extraction
-
+			// segment image
+			// image description (features)
+			// recognition/extraction
+			
+			// drive closer to the goal
+			finished = driveCloserToGoal(currentPosEstimate, finalGoal);
+		}
+	}
+	
+	/**
+	* drives closer to the goal using our "driving to goal" strategy
+	* @param currentPos believed current position and orientation of the robot
+	* @param finalGoal believed position of final goal
+	* @return true if robot is at goal, false if more moving might be needed
+	* read notes in comment inside method
+	*/
+	private boolean driveCloserToGoal(Waypoint currentPos, Waypoint finalGoal) {
+		/*
+		"driving to goal" driving strategy detailed in next comment,
+		coordinates may be with respect to the marker or the world coordinate frame,
+		currentPos and finalGoal are assumed to have some uncertainty,
+		this method may only call for the robot to move a certain maximum distance
+		to get to the goal assuming that this method will be called again after
+		recalculating the estimated currentPos and finalGoal,
+		this method returns true if the robot is at the goal or false if this
+		method needs to be called again
+		*/
+		
+		int maxDistance = 10;
+		
+		/* algorithm for driving strategy: "driving to goal"
+		if at goal
+			correctOrientation
+			return true
+		if finalGoal is <= maxDistance from currentPos
+			drive to finalGoal
+			correctOrientation
+			return true
+		calculate a waypoint on path to goal that is <= maxDistance distance away
+		drive to that point
+		return false
+		*/
+		
+		super.currentPosition = currentPos;
+		if (currentPos.distance(finalGoal) < 1) {
+			correctOrientation();
+			return true;
+		}
+		if (currentPost.distance(finalGoal) <= maxDistance) {
+			driveTo(finalGoal);
+			correctOrientation();
+			return true;
+		}
+		driveTo(pickPointOnWayToGoal(finalGoal, maxDistance));
+		return false;
+	}
+	
+	/** picks a point on the way to the goal, but no more than maxDistance away */
+	private Waypoint pickPointOnWayToGoal(Waypoint finalGoal, int maxDistance) {
+		// use similar triangles
+		double fd = super.currentPosition.distance(finalGoal);
+		double ratio = fd / maxDistance;
+		int dx = (int) ((finalGoal.getX() - super.currentPosition.getX()) * ratio);
+		int dy = (int) ((finalGoal.getY() - super.currentPosition.getY()) * ratio);
+		Waypoint np = new Waypoint(super.currentPosition.getX() + dx,
+			super.currentPosition.getY() + dy, super.currentPosition.getTheta());
+		return np;
 	}
 
 	private int avgXofCorners(int[][] cornerCoords) {
