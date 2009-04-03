@@ -271,6 +271,12 @@ public class ooPurtyColors extends Planner {
 
 	}
 
+	private int avgXofCorners(int[][] cornerCoords) {
+		return (int) (Math
+				.round((double) (cornerCoords[0][0] + cornerCoords[1][0]
+						+ cornerCoords[2][0] + cornerCoords[3][0])) / 4);
+	}
+	
 	private BufferedImage paintCornersWhite(BufferedImage lonePixelsGone,
 			int[][] cornerCoords) {
 		int imageWidth = lonePixelsGone.getWidth();
