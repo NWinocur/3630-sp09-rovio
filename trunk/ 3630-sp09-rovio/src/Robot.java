@@ -5,9 +5,18 @@ public class Robot extends RovioAPI {
 	public static final double DISTANCE_SCALE = 30.25;
 	public static int ANGLEPERMESSAGE = 01;// this int*15deg==angle/turn
 	public static int MILLISBETWEENTURNMESSAGES = 350 * ANGLEPERMESSAGE;
+	private RovioConstants.DriveType CURRENTHEADPOS; 
 	
+	/**
+	 * @return the cURRENTHEADPOS
+	 */
+	public RovioConstants.DriveType getCURRENTHEADPOS() {
+		return this.CURRENTHEADPOS;
+	}
+
 	public Robot(final RovioConnection connection) {
 		super(connection);
+		this.duckAndCover();
 	}
 	
 	public int turn(double amountToTurn) {
@@ -104,6 +113,20 @@ public class Robot extends RovioAPI {
 			super.manualDrive(RovioConstants.DriveType.FORWARD, (int)SPEED);
 		}
 		// System.out.println("...messages sent.");
+	}
+	
+	public void duckAndCover() {
+		super.manualDrive(RovioConstants.DriveType.HEAD_DOWN, (int) SPEED);
+		RovioAPI.napTime(1000);
+		this.CURRENTHEADPOS = RovioConstants.DriveType.HEAD_DOWN;
+		RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+	}
+	
+	public void lookMid()
+	{
+		super.manualDrive(RovioConstants.DriveType.HEAD_MIDDLE, (int) SPEED);
+		RovioAPI.napTime(1250);
+		this.CURRENTHEADPOS = RovioConstants.DriveType.HEAD_MIDDLE;
 	}
 	
 }
