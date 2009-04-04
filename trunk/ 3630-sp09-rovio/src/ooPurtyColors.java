@@ -431,10 +431,7 @@ public class ooPurtyColors extends Planner {
 		int targetIntRYGBV = 0;
 
 		boolean finished = false;
-		while (finished == false) {
-			super.robot.lookMid();
-			super.robot.duckAndCover();
-			
+		while (finished == false) {			
 			int targetHue = targetingData[targetIntRYGBV][0];
 			int targetHueWindow = targetingData[targetIntRYGBV][1];
 			int minSatToBeUseful = targetingData[targetIntRYGBV][2];
@@ -447,7 +444,12 @@ public class ooPurtyColors extends Planner {
 					targetHue, targetHueWindow, minSatToBeUseful);
 			if (null == hueSegmented) {
 				System.out.println("Target not sighted, thus not segmented");
-				// start looking confused. Perhaps random turn?
+				Waypoint currentPos = super.currentPosition;
+				Waypoint confusionPos = super.currentPosition;
+				confusionPos.setTheta(confusionPos
+						.getTheta() + Math.random()
+						* 180);
+				driveCloserToGoal(currentPos, confusionPos);
 			}
 			else {
 
