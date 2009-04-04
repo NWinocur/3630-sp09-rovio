@@ -432,6 +432,9 @@ public class ooPurtyColors extends Planner {
 
 		boolean finished = false;
 		while (finished == false) {
+			super.robot.lookMid();
+			super.robot.duckAndCover();
+			
 			int targetHue = targetingData[targetIntRYGBV][0];
 			int targetHueWindow = targetingData[targetIntRYGBV][1];
 			int minSatToBeUseful = targetingData[targetIntRYGBV][2];
@@ -472,15 +475,17 @@ public class ooPurtyColors extends Planner {
 				showImageAndPauseUntilOkayed(cornersPaintedWhite);
 
 				
-				BufferedImage edgesFoundByConvolving = convolveBuffWithKernel(
-						segmentedImage, edgeDetect1);
-				showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-				edgesFoundByConvolving = convolveBuffWithKernel(segmentedImage,
-						edgeDetect2Laplacian);
-				showImageAndPauseUntilOkayed(edgesFoundByConvolving);
-				edgesFoundByConvolving = convolveBuffWithKernel(segmentedImage,
-						edgeDetect3Laplacian);
-				showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+				/*
+				 * BufferedImage edgesFoundByConvolving =
+				 * convolveBuffWithKernel( segmentedImage, edgeDetect1);
+				 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+				 * edgesFoundByConvolving =
+				 * convolveBuffWithKernel(segmentedImage, edgeDetect2Laplacian);
+				 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+				 * edgesFoundByConvolving =
+				 * convolveBuffWithKernel(segmentedImage, edgeDetect3Laplacian);
+				 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
+				 */
 				 
 
 
