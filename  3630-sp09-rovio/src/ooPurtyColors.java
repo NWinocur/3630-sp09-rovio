@@ -51,11 +51,11 @@ public class ooPurtyColors extends Planner {
 		hsv[1] = (int) (S * 100);
 		hsv[2] = (int) (V * 100);
 	}
-	
+
 	public final float[] blur1 = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
-	
-	
+
+
 	public final float[] blur2 = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 
 
@@ -63,17 +63,17 @@ public class ooPurtyColors extends Planner {
 	public int cameraBrightness;
 	public RovioConstants.CameraResolution cameraResolution;
 	public final float[] edgeDetect1 = { -5, -5, -5, -5, 39, -5, -5, -5, -5 };
-										public final float[] edgeDetect2Laplacian = { 0, 1, 0, 1, -4, 1, 0, 1, 0 };
-											public final float[] edgeDetect3Laplacian = { -1, -1, -1, -1, 8, -1, -1,
-													-1, -1 };
-	
+	public final float[] edgeDetect2Laplacian = { 0, 1, 0, 1, -4, 1, 0, 1, 0 };
+	public final float[] edgeDetect3Laplacian = { -1, -1, -1, -1, 8, -1, -1,
+			-1, -1 };
+
 
 	public final float[] emboss = { -1, -1, 0, -1, 0, 1, 0, 1, 1 };
 	public RovioConstants.HeadPosition headPosition;
 	public final float[] horizLineDetect = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
 	public final float[] interestPointDetector = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
-	
+
 	/* use this to initialize the planner but do not have the robot start moving yet */
 	public ooPurtyColors(Robot robot) {
 		super(robot);
@@ -121,10 +121,13 @@ public class ooPurtyColors extends Planner {
 
 	private int avgXofCorners(int[][] cornerCoords) {
 		return (int) (Math
-				.round((double) (cornerCoords[0][0] + cornerCoords[1][0]
-						+ cornerCoords[2][0] + cornerCoords[3][0])) / 4);
+				.round((double) (((cornerCoords[0][0] + cornerCoords[2][0]) / 2) + ((cornerCoords[1][0] + cornerCoords[3][0]) / 2)) / 2));
 	}
-
+	
+	private int avgYofCorners(int[][] cornerCoords) {
+		return (int) (Math
+				.round((double) (((cornerCoords[0][1] + cornerCoords[1][1]) / 2) + ((cornerCoords[2][1] + cornerCoords[3][1]) / 2)) / 2));
+	}
 
 	private BufferedImage[] burstFire(int imagesToTake) {
 		BufferedImage imagesToReturn[] = new BufferedImage[imagesToTake];
@@ -138,9 +141,27 @@ public class ooPurtyColors extends Planner {
 			imagesToReturn[n] = super.robot.whatDoISee(cameraResolution);
 			RovioAPI.napTime(5);
 		}
+		System.out.println("TAKING NEW PICTURE(S)");
 		return imagesToReturn;
 
 	}
+	
+	private double CheckBothDiagonals(int[][] cornerCoords, double desiredCertainty,
+			BufferedImage hasPercievedTargetCorners, int targetHueWindow, int targetHue) {
+		int toReturn = 0;
+		if (isDiagonalOfTargetColor(cornerCoords[0][0], cornerCoords[0][1],
+				cornerCoords[3][0], cornerCoords[3][1], desiredCertainty,
+				hasPercievedTargetCorners, targetHueWindow, targetHue)) {
+			toReturn++;
+		}
+		if (isDiagonalOfTargetColor(cornerCoords[2][0], cornerCoords[2][1],
+				cornerCoords[1][0], cornerCoords[1][1], desiredCertainty,
+				hasPercievedTargetCorners, targetHueWindow, targetHue)) {
+			toReturn++;
+		}
+		return toReturn;
+	}
+
 
 	// ASSUMES SQUARE KERNEL
 	private BufferedImage convolveBuffWithKernel(BufferedImage sourceImage,
@@ -161,41 +182,38 @@ public class ooPurtyColors extends Planner {
 		return toReturn;
 	}
 
-
 	/**
-	* drives closer to the goal using our "driving to goal" strategy
-	* @param currentPos believed current position and orientation of the robot
-	* @param finalGoal believed position of final goal
-	* @return true if robot is at goal, false if more moving might be needed
-	* read notes in comment inside method
-	*/
+	 * drives closer to the goal using our "driving to goal" strategy
+	 * 
+	 * @param currentPos
+	 *            believed current position and orientation of the robot
+	 * @param finalGoal
+	 *            believed position of final goal
+	 * @return true if robot is at goal, false if more moving might be needed
+	 *         read notes in comment inside method
+	 */
 	private boolean driveCloserToGoal(Waypoint currentPos, Waypoint finalGoal) {
 		/*
-		"driving to goal" driving strategy detailed in next comment,
-		coordinates may be with respect to the marker or the world coordinate frame,
-		currentPos and finalGoal are assumed to have some uncertainty,
-		this method may only call for the robot to move a certain maximum distance
-		to get to the goal assuming that this method will be called again after
-		recalculating the estimated currentPos and finalGoal,
-		this method returns true if the robot is at the goal or false if this
-		method needs to be called again
-		*/
-		
+		 * "driving to goal" driving strategy detailed in next comment,
+		 * coordinates may be with respect to the marker or the world coordinate
+		 * frame, currentPos and finalGoal are assumed to have some uncertainty,
+		 * this method may only call for the robot to move a certain maximum
+		 * distance to get to the goal assuming that this method will be called
+		 * again after recalculating the estimated currentPos and finalGoal,
+		 * this method returns true if the robot is at the goal or false if this
+		 * method needs to be called again
+		 */
+
 		double maxDistance = 8;
-		
-		/* algorithm for driving strategy: "driving to goal"
-		if at goal
-			correctOrientation
-			return true
-		if finalGoal is <= maxDistance from currentPos
-			drive to finalGoal
-			correctOrientation
-			return true
-		calculate a waypoint on path to goal that is <= maxDistance distance away
-		drive to that point
-		return false
-		*/
-		
+
+		/*
+		 * algorithm for driving strategy: "driving to goal" if at goal
+		 * correctOrientation return true if finalGoal is <= maxDistance from
+		 * currentPos drive to finalGoal correctOrientation return true
+		 * calculate a waypoint on path to goal that is <= maxDistance distance
+		 * away drive to that point return false
+		 */
+
 		super.currentPosition = currentPos;
 		if (currentPos.distance(finalGoal) < 1) {
 			// correctOrientation();
@@ -268,7 +286,7 @@ public class ooPurtyColors extends Planner {
 			}
 		}
 	}
-	
+
 	private int howLonelyAmI(BufferedImage imageToCheck, int x, int y) {
 		// x and y passed here MUST be 0 > variable > image's max of that
 		// dimension
@@ -277,65 +295,72 @@ public class ooPurtyColors extends Planner {
 			for (int subx = x - 1; subx <= x + 1; subx++) {
 				int rgbtot = imageToCheck.getRaster().getSample(subx, suby, 0)
 				+ imageToCheck.getRaster().getSample(subx, suby, 1)
-						+ imageToCheck.getRaster().getSample(subx, suby, 2);
+				+ imageToCheck.getRaster().getSample(subx, suby, 2);
 				if (rgbtot == 0)
 					numBlankNeighbors++;
 			}
 		}
 		return numBlankNeighbors;
 	}
-	
+
 	/**
-	checks if a diagonal line between two opposite corners of a proposed
-		tradizoid mostly contains pixels of approximately the same color,
-		corner 2 must be right of corner 1 {(c2x >= c1x) must be true}
-	@param c1x x coordinate of corner 1
-	@param c1y y coordinate of corner 1
-	@param c2x x coordinate of corner 2
-	@param c2y y coordinate of corner 2
-	@param allowedExceptions the number of pixels allowed to be different along
-		the line
-	@param i the image
-	@param threshhold allowed difference in hue to be considered the same color
-	@return true if diagonal is mostly the same color as corners, false if c2x==c1x,
-		false otherwise
-	*/
+	 * checks if a diagonal line between two opposite corners of a proposed
+	 * tradizoid mostly contains pixels of approximately the same color, corner
+	 * 2 must be right of corner 1 {(c2x >= c1x) must be true}
+	 * 
+	 * @param c1x
+	 *            x coordinate of corner 1
+	 * @param c1y
+	 *            y coordinate of corner 1
+	 * @param c2x
+	 *            x coordinate of corner 2
+	 * @param c2y
+	 *            y coordinate of corner 2
+	 * @param allowedExceptions
+	 *            the number of pixels allowed to be different along the line
+	 * @param i
+	 *            the image
+	 * @param threshhold
+	 *            allowed difference in hue to be considered the same color
+	 * @return true if diagonal is mostly the same color as corners, false if
+	 *         c2x==c1x, false otherwise
+	 */
 	public boolean isDiagonalOfTargetColor(int c1x, int c1y, int c2x, int c2y,
 			double maxPercentBad, BufferedImage i, int threshhold, int targetHue) {
-			int dx = c2x - c1x;
-			int dy = c2y - c1y;
-			if (dx == 0) {
-				// System.out.print("dx == 0");
-				return false;
-			}
-			if (c2x < c1x) {
-				// System.out.print("c2x < c1x");
-				return false; // to avoid an infinite loop
-			}
-			double slope = ((double) dy) / dx;
-			int currentX = c1x;
-			int r, g, b, currentY;
-			int[] hsv;
-			int numExceptions = 0;
-			int pixelsTraversed = 0;
-			while (currentX < c2x) {
-				currentY = (int) Math.round((slope * (currentX - c1x)) + c1y);
-				r = i.getRaster().getSample(currentX, currentY, 0);
-				g = i.getRaster().getSample(currentX, currentY, 1);
-				b = i.getRaster().getSample(currentX, currentY, 2);
-				hsv = new int[3];
-				rgb2hsv(r, g, b, hsv);
-				if (Math.abs(hsv[0] - targetHue) > threshhold) {
-					numExceptions++;
-				}
-				currentX++;
-				pixelsTraversed++;
-			}
-			if (currentX == c2x
-				&& ((double) numExceptions) / pixelsTraversed <= maxPercentBad) {
-				return true;
-			}
+		int dx = c2x - c1x;
+		int dy = c2y - c1y;
+		if (dx == 0) {
+			// System.out.print("dx == 0");
 			return false;
+		}
+		if (c2x < c1x) {
+			// System.out.print("c2x < c1x");
+			return false; // to avoid an infinite loop
+		}
+		double slope = ((double) dy) / dx;
+		int currentX = c1x;
+		int r, g, b, currentY;
+		int[] hsv;
+		int numExceptions = 0;
+		int pixelsTraversed = 0;
+		while (currentX < c2x) {
+			currentY = (int) Math.round((slope * (currentX - c1x)) + c1y);
+			r = i.getRaster().getSample(currentX, currentY, 0);
+			g = i.getRaster().getSample(currentX, currentY, 1);
+			b = i.getRaster().getSample(currentX, currentY, 2);
+			hsv = new int[3];
+			rgb2hsv(r, g, b, hsv);
+			if (Math.abs(hsv[0] - targetHue) > threshhold) {
+				numExceptions++;
+			}
+			currentX++;
+			pixelsTraversed++;
+		}
+		if (currentX == c2x
+				&& ((double) numExceptions) / pixelsTraversed <= maxPercentBad) {
+			return true;
+		}
+		return false;
 	}
 
 	private BufferedImage killLonelyPixelsInTheBlackness(BufferedImage rawImage) {
@@ -394,46 +419,39 @@ public class ooPurtyColors extends Planner {
 		targetingData[4][0] = 275;
 		targetingData[4][1] = 20;
 		targetingData[4][2] = 5;
-		int tempTDataTestIndex = 0;
-		
+		int targetIntRYGBV = 2;
+
 		boolean finished = false;
 		while (finished == false) {
-			int targetHue = targetingData[tempTDataTestIndex][0];
-			int targetHueWindow = targetingData[tempTDataTestIndex][1];
-			int minSatToBeUseful = targetingData[tempTDataTestIndex][2];
-			
+			int targetHue = targetingData[targetIntRYGBV][0];
+			int targetHueWindow = targetingData[targetIntRYGBV][1];
+			int minSatToBeUseful = targetingData[targetIntRYGBV][2];
+
 			BufferedImage rawImageArray[] = burstFire(burstLength);
 			BufferedImage noiseReduced = reduceNoise(rawImageArray);
-			// showImage(noiseReduced);
-			noiseReduced = medianFilterRadius2(noiseReduced);
 			showImageAndPauseUntilOkayed(noiseReduced);
-			
+
 			BufferedImage hueSegmented = segmentOutAHue(noiseReduced,
 					targetHue, targetHueWindow, minSatToBeUseful);
-			// showImage(hueSegmented);
-			
-			BufferedImage segmentedImage = medianFilterRadius2(hueSegmented);
+
+			BufferedImage segmentedImage = reduceNoise(hueSegmented);
 			showImageAndPauseUntilOkayed(segmentedImage);
-		
+
 			int[][] cornerCoords = new int[4][2];
 			// 4 by 2 matrix of coordinates for each corner.
 			// first dimension of matrix is which pair:
 			// top left, top right, bottom left, bottom right.
 			// second dimension of matrix is x then y.
 			findCornerCoords(segmentedImage, cornerCoords);
-			System.out.println("Does diagonal seem to match hue? "
-					+ isDiagonalOfTargetColor(cornerCoords[0][0],
-							cornerCoords[0][1], cornerCoords[3][0],
-							cornerCoords[3][1], 0.95, segmentedImage,
-									targetHueWindow, targetHue)
-					+ " and "
-					+ isDiagonalOfTargetColor(cornerCoords[2][0],
-							cornerCoords[2][1], cornerCoords[1][0],
-							cornerCoords[1][1], 0.95, segmentedImage,
-									targetHueWindow, targetHue));
 			
+			
+			System.out.println("# diagonals that seem to match hue:  "
+					+ CheckBothDiagonals(cornerCoords, 0.95, segmentedImage,
+							targetHueWindow, targetHue));
+
 			BufferedImage cornersPaintedWhite = paintCornersWhite(
 					segmentedImage, cornerCoords);
+			System.out.println("Target height is " + targetHeight(cornerCoords));
 			showImageAndPauseUntilOkayed(cornersPaintedWhite);
 
 			/*
@@ -447,22 +465,23 @@ public class ooPurtyColors extends Planner {
 			 * edgeDetect3Laplacian);
 			 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
 			 */
-			 
+
 
 			// segment image
 			// image description (features)
 			// recognition/extraction
-			
+
 			// drive closer to the goal
 			// Waypoint currentPosEstimate = new Waypoint(0, 0, 90);
 			// Waypoint finalGoal = new Waypoint(0, 0, 90);
 			// finished = driveCloserToGoal(currentPosEstimate, finalGoal);
-			
-			tempTDataTestIndex = (tempTDataTestIndex + 1) % 5;
-			System.out.println(tempTDataTestIndex);
+
+			targetIntRYGBV = (targetIntRYGBV + 1) % 5;
+			System.out.println(targetIntRYGBV);
+			 
 		}
 	}
-	
+
 	private BufferedImage medianFilterRadius1(BufferedImage rawImage) {
 		int imageWidth = rawImage.getWidth();
 		int imageHeight = rawImage.getHeight();
@@ -502,7 +521,7 @@ public class ooPurtyColors extends Planner {
 				BufferedImage.TYPE_INT_RGB);
 
 		WritableRaster raster = toReturn.getRaster()
-				.createCompatibleWritableRaster();
+		.createCompatibleWritableRaster();
 
 		for (int y = 2; y < imageHeight - 2; ++y) {
 			for (int x = 2; x < imageWidth - 2; ++x) {
@@ -554,7 +573,6 @@ public class ooPurtyColors extends Planner {
 		}
 		return max;
 	}
-	
 	private int medianOfSeventeen(int[] array) {
 		int max, maxIndex;
 
@@ -576,7 +594,7 @@ public class ooPurtyColors extends Planner {
 		}
 		return max;
 	}
-	
+
 	private BufferedImage paintCornersWhite(BufferedImage lonePixelsGone,
 			int[][] cornerCoords) {
 		int imageWidth = lonePixelsGone.getWidth();
@@ -587,42 +605,34 @@ public class ooPurtyColors extends Planner {
 		WritableRaster raster = toReturn.getRaster()
 		.createCompatibleWritableRaster();
 
+		int xToPaint;
+		int yToPaint;
 		for (int i = 0; i < 4; i++) {
-			int x = cornerCoords[i][0];
-			int y = cornerCoords[i][1];
-			raster.setSample(x, y, 0, 254);
-			raster.setSample(x, y, 1, 254);
-			raster.setSample(x, y, 2, 254);
-			// System.out.println("Painting corner at X:" + x + ", Y:" + y);
+			xToPaint = cornerCoords[i][0];
+			yToPaint = cornerCoords[i][1];
+			raster.setSample(xToPaint, yToPaint, 0, 254);
+			raster.setSample(xToPaint, yToPaint, 1, 254);
+			raster.setSample(xToPaint, yToPaint, 2, 254);
 		}
 		
-		System.out.println("Slope of top line is "
-				+ ((double) (cornerCoords[0][1] - cornerCoords[1][1]))
-				/ ((double) (cornerCoords[0][0] - cornerCoords[1][0])));
-		System.out.println("Slope of bottom line is "
-				+ ((double) (cornerCoords[2][1] - cornerCoords[3][1]))
-				/ ((double) (cornerCoords[2][0] - cornerCoords[3][0])));
-		double a = euclideanDistance(cornerCoords[0][0], cornerCoords[0][1], cornerCoords[1][0], cornerCoords[1][1]);
-		double b = euclideanDistance(cornerCoords[1][0], cornerCoords[1][1], cornerCoords[2][0], cornerCoords[2][1]);
-		double c = euclideanDistance(cornerCoords[2][0], cornerCoords[2][1], cornerCoords[3][0], cornerCoords[3][1]);
-		double d = euclideanDistance(cornerCoords[3][0], cornerCoords[3][1],
-				cornerCoords[0][0], cornerCoords[0][1]);
-		double s = (a + b + c + d) / 2.0;
-		double p = euclideanDistance(cornerCoords[0][0], cornerCoords[0][1],
-				cornerCoords[2][0], cornerCoords[2][1]);
-		double q = euclideanDistance(cornerCoords[1][0], cornerCoords[1][1],
-				cornerCoords[3][0], cornerCoords[3][1]);
-		double K = Math.sqrt(4.0 * p * p * q * q
-				- ((double) (b * b + d * d - a * a - c * c) * (b * b + d * d
-						- a * a - c * c))) / 4.0;
-		System.out.println("a" + a + " b" + b + " c" + c + " d" + d + " q" + q
-				+ " p" + p);
-		System.out.println("Area is " + K);
+		xToPaint = avgXofCorners(cornerCoords);
+		yToPaint = avgYofCorners(cornerCoords);
+		raster.setSample(xToPaint, yToPaint, 0, 254);
+		raster.setSample(xToPaint, yToPaint, 1, 254);
+		raster.setSample(xToPaint, yToPaint, 2, 254);
+		
+		
+		
+		targetTopEdgeSlope(cornerCoords);
+		targetBottomEdgeSlope(cornerCoords);
+		targetHeight(cornerCoords);
+		targetArea(cornerCoords);
+		targetCenterXvsPhotoCenter(cornerCoords);
 		
 		toReturn.setData(raster);
 		return toReturn;
 	}
-	
+
 	/** picks a point on the way to the goal, but no more than maxDistance away */
 	private Waypoint pickPointOnWayToGoal(Waypoint finalGoal, double maxDistance) {
 		// use similar triangles
@@ -633,16 +643,20 @@ public class ooPurtyColors extends Planner {
 		double dx = ((finalGoal.getX() - super.currentPosition.getX()) * ratio);
 		double dy = ((finalGoal.getY() - super.currentPosition.getY()) * ratio);
 		Waypoint np = new Waypoint(super.currentPosition.getX() + dx,
-			super.currentPosition.getY() + dy, super.currentPosition.getTheta());
+				super.currentPosition.getY() + dy, super.currentPosition
+						.getTheta());
 		System.out
-				.println("pickPointOnWayToGoal is returning " + np.toString());
+		.println("pickPointOnWayToGoal is returning " + np.toString());
 		return np;
 	}
+	
+	private BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
+		return medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
+	}
 
-
-	private BufferedImage reduceNoise(BufferedImage[] rawImage) {
-		return medianFilterRadius2(average(rawImage));
-	} 
+	private BufferedImage reduceNoise(BufferedImage[] rawImages) {
+		return reduceNoise(average(rawImages));
+	}
 
 	private BufferedImage segmentOutAHue(BufferedImage noiseReduced,
 			int targetHue, int targetHueWindow, int minSatToBeUseful) {
@@ -691,6 +705,7 @@ public class ooPurtyColors extends Planner {
 		return toReturn;
 	}
 
+
 	public void showImage(final Image image) {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -705,11 +720,70 @@ public class ooPurtyColors extends Planner {
 		});
 
 		t.start();
-	}
-
+	} 
+	
 	public void showImageAndPauseUntilOkayed(final Image image) {
 		ImageIcon icon = new ImageIcon(image);
 		JOptionPane.showMessageDialog(null, icon);
+	}
+
+	private double targetArea(int[][] cornerCoords) {
+		double a = euclideanDistance(cornerCoords[0][0], cornerCoords[0][1],
+				cornerCoords[1][0], cornerCoords[1][1]);
+		double b = euclideanDistance(cornerCoords[1][0], cornerCoords[1][1],
+				cornerCoords[2][0], cornerCoords[2][1]);
+		double c = euclideanDistance(cornerCoords[2][0], cornerCoords[2][1],
+				cornerCoords[3][0], cornerCoords[3][1]);
+		double d = euclideanDistance(cornerCoords[3][0], cornerCoords[3][1],
+				cornerCoords[0][0], cornerCoords[0][1]);
+		double s = (a + b + c + d) / 2.0;
+		double p = euclideanDistance(cornerCoords[0][0], cornerCoords[0][1],
+				cornerCoords[2][0], cornerCoords[2][1]);
+		double q = euclideanDistance(cornerCoords[1][0], cornerCoords[1][1],
+				cornerCoords[3][0], cornerCoords[3][1]);
+		double K = Math.sqrt(4.0
+				* p
+				* p
+				* q
+				* q
+				- ((double) (b * b + d * d - a * a - c * c) * (b * b + d * d
+						- a * a - c * c))) / 4.0;
+		System.out.println("a" + a + " b" + b + " c" + c + " d" + d + " q" + q
+				+ " p" + p);
+		System.out.println("Area is " + K);
+		return K;
+	}
+
+	private double targetBottomEdgeSlope(int[][] cornerCoords)
+	{
+		double toReturn = ((double) (cornerCoords[2][1] - cornerCoords[3][1]))
+				/ ((double) (cornerCoords[2][0] - cornerCoords[3][0]));
+		System.out.println("Slope of bottom line is " + toReturn);
+		return toReturn;
+	}
+
+	private double targetCenterXvsPhotoCenter(int[][] cornerCoords)
+	{
+		int targetMidX = avgXofCorners(cornerCoords);
+		System.out.println("Because target's center is at " + targetMidX
+				+ " target is " + (targetMidX - 320) + " pixels from center");
+		return targetMidX - 320;
+	}
+	
+	private int targetHeight(int[][] cornerCoords)
+	{
+		int avgYofTop2Corners = (int) (Math
+				.round((double) (cornerCoords[0][1] + cornerCoords[1][1])) / 2);
+		int avgYofBottom2Corners = (int) (Math
+				.round((double) (cornerCoords[2][1] + cornerCoords[2][1]) / 2));
+		return avgYofBottom2Corners - avgYofTop2Corners;
+	}
+	
+	private double targetTopEdgeSlope(int[][] cornerCoords) {
+		double toReturn = ((double) (cornerCoords[0][1] - cornerCoords[1][1]))
+				/ ((double) (cornerCoords[0][0] - cornerCoords[1][0]));
+		System.out.println("Slope of top line is " + toReturn);
+		return toReturn;
 	}
 
 	private int[] whatDoNineNeighborsLookLike(BufferedImage imageToCheck, int x,
@@ -722,7 +796,7 @@ public class ooPurtyColors extends Planner {
 		for (int suby = y - 1; suby <= y + 1; suby++) {
 			for (int subx = x - 1; subx <= x + 1; subx++) {
 				toReturn[indexOfToReturnWeWillWrite] = imageToCheck.getRaster()
-						.getSample(subx, suby, channelOfInterest);
+				.getSample(subx, suby, channelOfInterest);
 				indexOfToReturnWeWillWrite++;
 			}
 		}
