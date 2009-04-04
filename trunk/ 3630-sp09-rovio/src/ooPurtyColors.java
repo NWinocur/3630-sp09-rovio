@@ -790,6 +790,7 @@ public class ooPurtyColors extends Planner {
 	{
 		double toReturn = ((double) (cornerCoords[2][1] - cornerCoords[3][1]))
 		/ ((double) (cornerCoords[2][0] - cornerCoords[3][0]));
+		toReturn *= -1.0;
 		System.out.println("Slope of bottom line is " + toReturn);
 		return toReturn;
 	}
@@ -813,7 +814,8 @@ public class ooPurtyColors extends Planner {
 
 	private double targetTopEdgeSlope(int[][] cornerCoords) {
 		double toReturn = ((double) (cornerCoords[0][1] - cornerCoords[1][1]))
-		/ ((double) (cornerCoords[0][0] - cornerCoords[1][0]));
+				/ ((double) (cornerCoords[0][0] - cornerCoords[1][0]));
+		toReturn *= -1.0;
 		System.out.println("Slope of top line is " + toReturn);
 		return toReturn;
 	}
