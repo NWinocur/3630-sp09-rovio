@@ -506,9 +506,10 @@ public class ooPurtyColors extends Planner {
 					// we are now in front of marker (slopes ~ 0) and
 					// marker is centered
 					// use distance table to drive closer to goal
+					int avgHeight = targetHeight(cornerCoords);
 					int distanceFromMarker = // fix this as mentioned below
-					// use distance table to get distance to marker, but
-					// convert it into meters
+					// use distance table to get distance to marker, using
+					// avgHeight
 					super.currentPosition = new Waypoint(0, 0, 90);
 					driveTo(new Waypoint(0, distanceFromMarker, 90));
 					// once at goal, block until program is manually stopped
