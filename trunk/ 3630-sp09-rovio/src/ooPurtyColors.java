@@ -3,6 +3,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -73,6 +75,8 @@ public class ooPurtyColors extends Planner {
 	public final float[] horizLineDetect = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
 	public final float[] interestPointDetector = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
+	
+	private DistanceTable distanceTable;
 
 	/* use this to initialize the planner but do not have the robot start moving yet */
 	public ooPurtyColors(Robot robot) {
@@ -80,6 +84,12 @@ public class ooPurtyColors extends Planner {
 		cameraResolution = RovioConstants.CameraResolution._640x480;
 		cameraBrightness = 6;
 		headPosition = RovioConstants.HeadPosition.LOW;
+			
+		try {
+			distanceTable = new DistanceTable(new File("distanceTable.txt"));
+		} catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	private boolean areAllCornerCoordsInView(boolean[] setOfBools) {
 		for (int i = 0; i < setOfBools.length; i++) {
@@ -507,9 +517,11 @@ public class ooPurtyColors extends Planner {
 					// marker is centered
 					// use distance table to drive closer to goal
 					int avgHeight = targetHeight(cornerCoords);
-					int distanceFromMarker = // fix this as mentioned below
+
 					// use distance table to get distance to marker, using
 					// avgHeight
+					double distanceFromMarker = distanceTable.getDistance(avgHeight);
+
 					super.currentPosition = new Waypoint(0, 0, 90);
 					driveTo(new Waypoint(0, distanceFromMarker, 90));
 					// once at goal, block until program is manually stopped
