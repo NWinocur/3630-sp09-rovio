@@ -499,13 +499,69 @@ public class ooPurtyColors extends Planner {
 				// Waypoint currentPosEstimate = new Waypoint(0, 0, 90);
 				// Waypoint finalGoal = new Waypoint(0, 0, 90);
 				// finished = driveCloserToGoal(currentPosEstimate, finalGoal);
+				
+				// alternate driving strategy: play chicken
+				boolean aligned = playChicken(cornerCoords);
+				if (aligned == true) {
+					// we are now in front of marker (slopes ~ 0) and
+					// marker is centered
+					// use distance table to drive closer to goal
+					int distanceFromMarker = // fix this as mentioned below
+					// use distance table to get distance to marker, but
+					// convert it into meters
+					super.currentPosition = new Waypoint(0, 0, 90);
+					driveTo(new Waypoint(0, distanceFromMarker, 90));
+					// once at goal, block until program is manually stopped
+					while (true) {}
+				}
 			}
-			targetIntRYGBV = (targetIntRYGBV + 1) % 5;
+			// we want to use red for right now
+			//targetIntRYGBV = (targetIntRYGBV + 1) % 5;
 			System.out.println(targetIntRYGBV);
 
 		}
 	}
-
+	
+	/** driving strategy: play chicken
+	* idea: alternate between centering the marker in the view and driving parallel
+	* to the marker until the robot is in front of the marker, facing the marker
+	* such that it simply has to drive forward until it gets to the goal position
+	* as if it was playing chicken with the marker (get in front of it and then
+	* drive towards it
+	* @return true if aligned and false otherwise
+	* this method only aligns it, but does not drive it forward
+	*/
+	private boolean playChicken(int[][] cornerCoords) {
+		boolean aligned = false;
+		// center marker in view
+		int center = avgXofCorners(cornerCoords);
+		if (center < 200) {
+			// turn left 15 degrees
+			super.currentPosition = new Waypoint(0, 0, 0);
+			driveTo(new Waypoint(0, 0, 15));
+		} else if (center > 440) {
+			// turn right 15 degrees
+			super.currentPosition = new Waypoint(0, 0, 0);
+			driveTo(new Waypoint(0, 0, -15));
+		} else {
+			// marker is sufficiently centered
+			// drive parallel to marker a short distance to make slope closer to 0
+			// top edge slope is a better indicator than bottom slope
+			double slope = targetTopEdgeSlope(cornerCoords);
+			// slope allowed threshhold determined from angle table
+			if (Math.abs(slope) > 0.02) {
+				// sloped too much
+				// move parallel to marker to make slope closer to 0
+				super.currentPosition = new Waypoint(0, 0, 90);
+				driveTo(new Waypoint(0.25, 0, 90));
+			} else {
+				// nothing more needed except to drive straight at marker
+				aligned = true;
+			}
+		}
+		return aligned;
+	}
+	
 	private BufferedImage medianFilterRadius1(BufferedImage rawImage) {
 		int imageWidth = rawImage.getWidth();
 		int imageHeight = rawImage.getHeight();
