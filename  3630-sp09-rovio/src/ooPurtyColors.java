@@ -11,6 +11,8 @@ import javax.swing.JOptionPane;
 
 public class ooPurtyColors extends Planner {
 
+	public static final boolean showImages = true;
+
 	static public void rgb2hsv(int r, int g, int b, int hsv[]) {
 		// method taken from
 		// http://www.f4.fhtw-berlin.de/~barthel/ImageJ/ColorInspector//HTMLHelp/farbraumJava.htm
@@ -53,8 +55,6 @@ public class ooPurtyColors extends Planner {
 		hsv[1] = (int) (S * 100);
 		hsv[2] = (int) (V * 100);
 	}
-	
-	public static final boolean showImages = false;
 
 	public final float[] blur1 = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
@@ -66,19 +66,19 @@ public class ooPurtyColors extends Planner {
 	public final int burstLength = 4;
 	public int cameraBrightness;
 	public RovioConstants.CameraResolution cameraResolution;
+	private DistanceTable distanceTable;
 	public final float[] edgeDetect1 = { -5, -5, -5, -5, 39, -5, -5, -5, -5 };
 	public final float[] edgeDetect2Laplacian = { 0, 1, 0, 1, -4, 1, 0, 1, 0 };
+
+
 	public final float[] edgeDetect3Laplacian = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
-
-
 	public final float[] emboss = { -1, -1, 0, -1, 0, 1, 0, 1, 1 };
 	public RovioConstants.HeadPosition headPosition;
 	public final float[] horizLineDetect = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
+
 	public final float[] interestPointDetector = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
-	
-	private DistanceTable distanceTable;
 
 	/* use this to initialize the planner but do not have the robot start moving yet */
 	public ooPurtyColors(Robot robot) {
@@ -86,7 +86,7 @@ public class ooPurtyColors extends Planner {
 		cameraResolution = RovioConstants.CameraResolution._640x480;
 		cameraBrightness = 6;
 		headPosition = RovioConstants.HeadPosition.LOW;
-			
+
 		try {
 			distanceTable = new DistanceTable(new File("distanceTable.txt"));
 		} catch(FileNotFoundException e) {
@@ -312,19 +312,21 @@ public class ooPurtyColors extends Planner {
 		// x and y passed here MUST be 0 > variable > image's max of that
 		// dimension
 		int numBlankNeighbors = 0;
-//		final int width = imageToCheck.getWidth(), height = imageToCheck.getHeight();
+		// final int width = imageToCheck.getWidth(), height =
+		// imageToCheck.getHeight();
 		final WritableRaster raster = imageToCheck.getRaster();
 		for (int suby = y - 1; suby <= y + 1; suby++) {
 			for (int subx = x - 1; subx <= x + 1; subx++) {
-//				if(suby < 0 || subx < 0 || subx >= width || suby >= height ) {
-//					numBlankNeighbors++;
-//				} else {
-					int rgbtot = raster.getSample(subx, suby, 0)
-					+ raster.getSample(subx, suby, 1)
-					+ raster.getSample(subx, suby, 2);
-					if (rgbtot == 0)
-						numBlankNeighbors++;
-//				}
+				// if(suby < 0 || subx < 0 || subx >= width || suby >= height )
+				// {
+				// numBlankNeighbors++;
+				// } else {
+				int rgbtot = raster.getSample(subx, suby, 0)
+						+ raster.getSample(subx, suby, 1)
+						+ raster.getSample(subx, suby, 2);
+				if (rgbtot == 0)
+					numBlankNeighbors++;
+				// }
 			}
 		}
 		return numBlankNeighbors;
@@ -420,6 +422,45 @@ public class ooPurtyColors extends Planner {
 		return toReturn;
 	}
 
+	private boolean looksLikeWeAreParked(BufferedImage hueSegmented,
+			final int targetHue, final int targetHueWindow,
+			final int minSatToBeUseful) {
+		final int imageWidth = hueSegmented.getWidth();
+		final int imageHeight = hueSegmented.getHeight();
+		
+		final double[][] hueArray = new double[imageWidth][imageHeight];
+		final double[][] satArray = new double[imageWidth][imageHeight];
+
+		int targetPixelsFound = 0;
+		int r, g, b;
+		int[] hsv;
+		for (int y = 0; y < imageHeight; ++y) {
+
+			for (int x = 0; x < imageWidth; ++x) {
+				r = hueSegmented.getRaster().getSample(x, y, 0);
+				g = hueSegmented.getRaster().getSample(x, y, 1);
+				b = hueSegmented.getRaster().getSample(x, y, 2);
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+
+				hueArray[x][y] = hsv[0];
+				satArray[x][y] = hsv[1];
+				if (targetHueWindow > Math.abs(hueArray[x][y] - targetHue)
+						&& minSatToBeUseful < satArray[x][y]) {
+					targetPixelsFound++;
+				}
+			}
+		}
+		double percentPixelsSatisfied = ((double)targetPixelsFound)/(imageWidth*imageHeight); 
+		if (percentPixelsSatisfied >= 0.95) {
+			System.out
+					.println("Looks like " + percentPixelsSatisfied
+					+ "of view is target hue");
+			return true;
+		}
+		return false;
+	}
+
 	/*
 	 * use this to actually move, either by one iteration or the entire program
 	 * 
@@ -447,6 +488,7 @@ public class ooPurtyColors extends Planner {
 		targetingData[4][1] = 20;
 		targetingData[4][2] = 5;
 		int targetIntRYGBV = 0;
+		int confusedTurns = 0;
 
 		boolean finished = false;
 		while (finished == false) {			
@@ -462,17 +504,32 @@ public class ooPurtyColors extends Planner {
 					targetHue, targetHueWindow, minSatToBeUseful);
 			if (null == hueSegmented) {
 				System.out.println("Target not sighted, thus not segmented");
-//				Waypoint currentPos = super.currentPosition;
-// 				Waypoint confusionPos = super.currentPosition;
-/*				confusionPos.setTheta(confusionPos
-						.getTheta() + Math.random()
-						* 180);*/
-				
-				currentPosition = new Waypoint(0, 0, 90);
-				driveTo(new Waypoint(0, 0, 90-15));
-//				driveCloserToGoal(currentPos, confusionPos);
+				confusedTurns = lookConfused(confusedTurns);
+			}
+			else if (looksLikeWeAreParked(hueSegmented, targetHue,
+					targetHueWindow, minSatToBeUseful)) {
+				super.robot.lookMid();
+				BufferedImage parkCheckImageArray[] = burstFire(burstLength);
+				BufferedImage noiseReducedParkCheck = reduceNoise(parkCheckImageArray);
+				showImageAndPauseUntilOkayed(noiseReducedParkCheck);
+
+				BufferedImage hueSegmentedParkCheck = segmentOutAHue(
+						noiseReducedParkCheck, targetHue, targetHueWindow,
+						minSatToBeUseful);
+				if (null == hueSegmentedParkCheck) {
+					super.robot.duckAndCover();
+				} else if (looksLikeWeAreParked(hueSegmentedParkCheck,
+						targetHue,
+						targetHueWindow, minSatToBeUseful)) {
+					System.exit(1);
+				} else {
+					super.robot.duckAndCover();
+				}
+				super.robot.duckAndCover();
+				confusedTurns = lookConfused(confusedTurns);
 			}
 			else {
+				confusedTurns = 0;
 
 				BufferedImage segmentedImage = reduceNoise(hueSegmented);
 
@@ -484,7 +541,7 @@ public class ooPurtyColors extends Planner {
 				// top left, top right, bottom left, bottom right.
 				// second dimension of matrix is x then y.
 				findCornerCoords(segmentedImage, cornerCoords);
-				
+
 				System.out.println("Are all corner coordinates in view? "
 						+ areAllCornerCoordsInView(whichCornerCoordsAreInView(cornerCoords)));
 				System.out.println("# diagonals that seem to match hue:  "
@@ -497,7 +554,7 @@ public class ooPurtyColors extends Planner {
 						+ targetHeight(cornerCoords));
 				showImageAndPauseUntilOkayed(cornersPaintedWhite);
 
-				
+
 				/*
 				 * BufferedImage edgesFoundByConvolving =
 				 * convolveBuffWithKernel( segmentedImage, edgeDetect1);
@@ -509,7 +566,7 @@ public class ooPurtyColors extends Planner {
 				 * convolveBuffWithKernel(segmentedImage, edgeDetect3Laplacian);
 				 * showImageAndPauseUntilOkayed(edgesFoundByConvolving);
 				 */
-				 
+
 
 
 				// segment image
@@ -520,7 +577,7 @@ public class ooPurtyColors extends Planner {
 				// Waypoint currentPosEstimate = new Waypoint(0, 0, 90);
 				// Waypoint finalGoal = new Waypoint(0, 0, 90);
 				// finished = driveCloserToGoal(currentPosEstimate, finalGoal);
-				
+
 				int avgHeight = targetHeight(cornerCoords);
 				// alternate driving strategy: play chicken
 				double distanceFromMarker = distanceTable.getDistance(avgHeight);
@@ -533,16 +590,17 @@ public class ooPurtyColors extends Planner {
 
 					// use distance table to get distance to marker, using
 					// avgHeight
-//					double distanceFromMarker = distanceTable.getDistance(avgHeight);
-					
-/*					if(distanceFromMarker > 0.9144) {
-						makeMove();
-					}*/
+					// double distanceFromMarker =
+					// distanceTable.getDistance(avgHeight);
+
+					/*
+					 * if(distanceFromMarker > 0.9144) { makeMove(); }
+					 */
 
 					super.currentPosition = new Waypoint(0, 0, 90);
 					driveTo(new Waypoint(0, distanceFromMarker - 0.1016, 90));
 					// once at goal, block until program is manually stopped
-					System.exit(1);
+					// System.exit(1);
 					//while (true) {}
 				}
 			}
@@ -553,52 +611,21 @@ public class ooPurtyColors extends Planner {
 		}
 	}
 	
-	/** driving strategy: play chicken
-	* idea: alternate between centering the marker in the view and driving parallel
-	* to the marker until the robot is in front of the marker, facing the marker
-	* such that it simply has to drive forward until it gets to the goal position
-	* as if it was playing chicken with the marker (get in front of it and then
-	* drive towards it
-	* @return true if aligned and false otherwise
-	* this method only aligns it, but does not drive it forward
-	*/
-	private boolean playChicken(int[][] cornerCoords, double distanceFromMarker) {
-		boolean aligned = false;
-		// center marker in view
-		int center = avgXofCorners(cornerCoords);
-		if (center < 100) {
-			// turn left 15 degrees
-			super.currentPosition = new Waypoint(0, 0, 0);
-			driveTo(new Waypoint(0, 0, 15));
-		} else if (center > 540) {
-			// turn right 15 degrees
-			super.currentPosition = new Waypoint(0, 0, 0);
-			driveTo(new Waypoint(0, 0, -15));
+	private int lookConfused(int confusedTurns) {
+		if (0 == confusedTurns) {
+			currentPosition = new Waypoint(0, 0, 90);
+			driveTo(new Waypoint(0, -0.50, 90));
 		} else {
-			final double moveToMinDistance = 0.762;
-			if(distanceFromMarker > moveToMinDistance) {
-				super.currentPosition = new Waypoint(0, 0, 90);
-				driveTo(new Waypoint(0, distanceFromMarker - moveToMinDistance, 90));
-				return false;
-			}
-			// marker is sufficiently centered
-			// drive parallel to marker a short distance to make slope closer to 0
-			// top edge slope is a better indicator than bottom slope
-			double slope = (targetTopEdgeSlope(cornerCoords) - targetBottomEdgeSlope(cornerCoords)) / 2;
-			// slope allowed threshhold determined from angle table
-			if (Math.abs(slope) > 0.03) {
-				// sloped too much
-				// move parallel to marker to make slope closer to 0
-				super.currentPosition = new Waypoint(0, 0, 90);
-				driveTo(new Waypoint(slope > 0 ? -0.25 : 0.25, 0, 90));
-			} else {
-				// nothing more needed except to drive straight at marker
-				aligned = true;
-			}
+			currentPosition = new Waypoint(0, 0, 90);
+			driveTo(new Waypoint(0, 0, 90 - 15));
 		}
-		return aligned;
+		confusedTurns = (confusedTurns + 1) % 25;
+		System.out
+				.println("\"Confused \", did \"confused\" action, confusedTurns is now == "
+						+ confusedTurns);
+		return confusedTurns;
+
 	}
-	
 	private BufferedImage medianFilterRadius1(BufferedImage rawImage) {
 		int imageWidth = rawImage.getWidth();
 		int imageHeight = rawImage.getHeight();
@@ -665,6 +692,7 @@ public class ooPurtyColors extends Planner {
 		toReturn.setData(raster);
 		return toReturn;
 	}
+
 	/**
 	 * taken from http://www.jhlabs.com/ip/filters/MedianFilter.html Takes in an
 	 * array of size 9 (MUST be this size! relies on indexes 0 to 8
@@ -691,7 +719,6 @@ public class ooPurtyColors extends Planner {
 		}
 		return max;
 	}
-
 	private int medianOfSeventeen(int[] array) {
 		int max, maxIndex;
 
@@ -769,6 +796,61 @@ public class ooPurtyColors extends Planner {
 		return np;
 	}
 
+	/**
+	 * driving strategy: play chicken idea: alternate between centering the
+	 * marker in the view and driving parallel to the marker until the robot is
+	 * in front of the marker, facing the marker such that it simply has to
+	 * drive forward until it gets to the goal position as if it was playing
+	 * chicken with the marker (get in front of it and then drive towards it
+	 * 
+	 * @return true if aligned and false otherwise this method only aligns it,
+	 *         but does not drive it forward
+	 */
+	private boolean playChicken(int[][] cornerCoords, double distanceFromMarker) {
+		boolean aligned = false;
+		// center marker in view
+		int center = avgXofCorners(cornerCoords);
+		if (center < 100) {
+			// turn left 15 degrees
+			super.currentPosition = new Waypoint(0, 0, 0);
+			driveTo(new Waypoint(0, 0, 15));
+		} else if (center > 540) {
+			// turn right 15 degrees
+			super.currentPosition = new Waypoint(0, 0, 0);
+			driveTo(new Waypoint(0, 0, -15));
+		} else {
+			final double moveToMinDistance = 0.762;
+			if(distanceFromMarker > moveToMinDistance) {
+				super.currentPosition = new Waypoint(0, 0, 90);
+				driveTo(new Waypoint(0, distanceFromMarker - moveToMinDistance, 90));
+				return false;
+			}
+			// marker is sufficiently centered
+			// drive parallel to marker a short distance to make slope closer to 0
+			// top edge slope is a better indicator than bottom slope
+			double slope = (targetTopEdgeSlope(cornerCoords) - targetBottomEdgeSlope(cornerCoords)) / 2;
+			// slope allowed threshhold determined from angle table
+			if (Math.abs(slope) > 0.03) {
+				// sloped too much
+				// move parallel to marker to make slope closer to 0
+				super.currentPosition = new Waypoint(0, 0, 90);
+				double distToMoveParallel;
+				if (Math.abs(center-320) < 146)
+				{
+					distToMoveParallel = 0.125;
+				}
+				else {
+					distToMoveParallel = 0.25;
+				}
+				driveTo(new Waypoint(slope > 0 ? -distToMoveParallel : distToMoveParallel, 0, 90));
+			} else {
+				// nothing more needed except to drive straight at marker
+				aligned = true;
+			}
+		}
+		return aligned;
+	}
+
 	private BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
 		return medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
 	}
@@ -828,7 +910,7 @@ public class ooPurtyColors extends Planner {
 		}
 		if (25 > targetPixelsWritten) {
 			System.out
-					.println("WARNING: desired target too small or not seen, segment returning null");
+			.println("WARNING: desired target too small or not seen, segment returning null");
 			return null;
 		}
 		toReturn.setData(raster);
@@ -836,19 +918,21 @@ public class ooPurtyColors extends Planner {
 	} 
 
 	public void showImage(final Image image) {
-		Thread t = new Thread(new Runnable() {
-			public void run() {
-				ImageIcon icon = new ImageIcon(image);
-				/*
-				 * JFrame f = new JFrame("image preview"); JPanel p = new
-				 * JPanel(); f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				 * f.getContentPane().add(p); f.pack(); f.setVisible(true);
-				 */
-				JOptionPane.showMessageDialog(null, icon);
-			}
-		});
-
-		t.start();
+		if (showImages) {
+			Thread t = new Thread(new Runnable() {
+				public void run() {
+					ImageIcon icon = new ImageIcon(image);
+					/*
+					 * JFrame f = new JFrame("image preview"); JPanel p = new
+					 * JPanel();
+					 * f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					 * f.getContentPane().add(p); f.pack(); f.setVisible(true);
+					 */
+					JOptionPane.showMessageDialog(null, icon);
+				}
+			});
+			t.start();
+		}
 	}
 
 	public void showImageAndPauseUntilOkayed(final Image image) {
@@ -913,7 +997,7 @@ public class ooPurtyColors extends Planner {
 
 	private double targetTopEdgeSlope(int[][] cornerCoords) {
 		double toReturn = ((double) (cornerCoords[0][1] - cornerCoords[1][1]))
-				/ ((double) (cornerCoords[0][0] - cornerCoords[1][0]));
+		/ ((double) (cornerCoords[0][0] - cornerCoords[1][0]));
 		toReturn *= -1;
 		System.out.println("Slope of top line is " + toReturn);
 		return toReturn;
@@ -978,7 +1062,7 @@ public class ooPurtyColors extends Planner {
 				channelOfInterest);
 		return toReturn;
 	}
-	
+
 	private boolean[] whichCornerCoordsAreInView(int[][] cornerCoords)
 	{
 		boolean[] toReturn = new boolean[4];
