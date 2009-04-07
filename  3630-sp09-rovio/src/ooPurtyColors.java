@@ -53,6 +53,8 @@ public class ooPurtyColors extends Planner {
 		hsv[1] = (int) (S * 100);
 		hsv[2] = (int) (V * 100);
 	}
+	
+	public static final boolean showImages = false;
 
 	public final float[] blur1 = { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
@@ -251,10 +253,10 @@ public class ooPurtyColors extends Planner {
 		return Math.round(Math.sqrt((i - x) * (i - x) + (j - y) * (j - y)));
 	}
 
-	private void findCornerCoords(BufferedImage mostOrAllNoiseGone,
+	private void findCornerCoords(final BufferedImage mostOrAllNoiseGone,
 			int[][] cornerCoords) {
-		int imageWidth = mostOrAllNoiseGone.getWidth();
-		int imageHeight = mostOrAllNoiseGone.getHeight();
+		final int imageWidth = mostOrAllNoiseGone.getWidth();
+		final int imageHeight = mostOrAllNoiseGone.getHeight();
 
 		// initialize corner coordinates to their opposites
 		// the imminent for loop should overwrite them with real answers,
@@ -306,17 +308,23 @@ public class ooPurtyColors extends Planner {
 		}
 	}
 
-	private int howLonelyAmI(BufferedImage imageToCheck, int x, int y) {
+	private int howLonelyAmI(final BufferedImage imageToCheck, final int x, final int y) {
 		// x and y passed here MUST be 0 > variable > image's max of that
 		// dimension
 		int numBlankNeighbors = 0;
+//		final int width = imageToCheck.getWidth(), height = imageToCheck.getHeight();
+		final WritableRaster raster = imageToCheck.getRaster();
 		for (int suby = y - 1; suby <= y + 1; suby++) {
 			for (int subx = x - 1; subx <= x + 1; subx++) {
-				int rgbtot = imageToCheck.getRaster().getSample(subx, suby, 0)
-				+ imageToCheck.getRaster().getSample(subx, suby, 1)
-				+ imageToCheck.getRaster().getSample(subx, suby, 2);
-				if (rgbtot == 0)
-					numBlankNeighbors++;
+//				if(suby < 0 || subx < 0 || subx >= width || suby >= height ) {
+//					numBlankNeighbors++;
+//				} else {
+					int rgbtot = raster.getSample(subx, suby, 0)
+					+ raster.getSample(subx, suby, 1)
+					+ raster.getSample(subx, suby, 2);
+					if (rgbtot == 0)
+						numBlankNeighbors++;
+//				}
 			}
 		}
 		return numBlankNeighbors;
@@ -424,7 +432,7 @@ public class ooPurtyColors extends Planner {
 		// targetingData: array of [r, y, g, b, v][target, window, minsat]
 		int[][] targetingData = new int[5][3];
 		targetingData[0][0] = 18;
-		targetingData[0][1] = 15;
+		targetingData[0][1] = 50; // was 20
 		targetingData[0][2] = 30;
 		targetingData[1][0] = 60;
 		targetingData[1][1] = 15;
@@ -454,12 +462,15 @@ public class ooPurtyColors extends Planner {
 					targetHue, targetHueWindow, minSatToBeUseful);
 			if (null == hueSegmented) {
 				System.out.println("Target not sighted, thus not segmented");
-				Waypoint currentPos = super.currentPosition;
-				Waypoint confusionPos = super.currentPosition;
-				confusionPos.setTheta(confusionPos
+//				Waypoint currentPos = super.currentPosition;
+// 				Waypoint confusionPos = super.currentPosition;
+/*				confusionPos.setTheta(confusionPos
 						.getTheta() + Math.random()
-						* 180);
-				driveCloserToGoal(currentPos, confusionPos);
+						* 180);*/
+				
+				currentPosition = new Waypoint(0, 0, 90);
+				driveTo(new Waypoint(0, 0, 90-15));
+//				driveCloserToGoal(currentPos, confusionPos);
 			}
 			else {
 
@@ -510,22 +521,29 @@ public class ooPurtyColors extends Planner {
 				// Waypoint finalGoal = new Waypoint(0, 0, 90);
 				// finished = driveCloserToGoal(currentPosEstimate, finalGoal);
 				
+				int avgHeight = targetHeight(cornerCoords);
 				// alternate driving strategy: play chicken
-				boolean aligned = playChicken(cornerCoords);
+				double distanceFromMarker = distanceTable.getDistance(avgHeight);
+				System.out.println("Distance from marker: " + distanceFromMarker);
+				boolean aligned = playChicken(cornerCoords, distanceFromMarker);
 				if (aligned == true) {
 					// we are now in front of marker (slopes ~ 0) and
 					// marker is centered
 					// use distance table to drive closer to goal
-					int avgHeight = targetHeight(cornerCoords);
 
 					// use distance table to get distance to marker, using
 					// avgHeight
-					double distanceFromMarker = distanceTable.getDistance(avgHeight);
+//					double distanceFromMarker = distanceTable.getDistance(avgHeight);
+					
+/*					if(distanceFromMarker > 0.9144) {
+						makeMove();
+					}*/
 
 					super.currentPosition = new Waypoint(0, 0, 90);
-					driveTo(new Waypoint(0, distanceFromMarker, 90));
+					driveTo(new Waypoint(0, distanceFromMarker - 0.1016, 90));
 					// once at goal, block until program is manually stopped
-					while (true) {}
+					System.exit(1);
+					//while (true) {}
 				}
 			}
 			// we want to use red for right now
@@ -544,29 +562,35 @@ public class ooPurtyColors extends Planner {
 	* @return true if aligned and false otherwise
 	* this method only aligns it, but does not drive it forward
 	*/
-	private boolean playChicken(int[][] cornerCoords) {
+	private boolean playChicken(int[][] cornerCoords, double distanceFromMarker) {
 		boolean aligned = false;
 		// center marker in view
 		int center = avgXofCorners(cornerCoords);
-		if (center < 200) {
+		if (center < 100) {
 			// turn left 15 degrees
 			super.currentPosition = new Waypoint(0, 0, 0);
 			driveTo(new Waypoint(0, 0, 15));
-		} else if (center > 440) {
+		} else if (center > 540) {
 			// turn right 15 degrees
 			super.currentPosition = new Waypoint(0, 0, 0);
 			driveTo(new Waypoint(0, 0, -15));
 		} else {
+			final double moveToMinDistance = 0.762;
+			if(distanceFromMarker > moveToMinDistance) {
+				super.currentPosition = new Waypoint(0, 0, 90);
+				driveTo(new Waypoint(0, distanceFromMarker - moveToMinDistance, 90));
+				return false;
+			}
 			// marker is sufficiently centered
 			// drive parallel to marker a short distance to make slope closer to 0
 			// top edge slope is a better indicator than bottom slope
-			double slope = targetTopEdgeSlope(cornerCoords);
+			double slope = (targetTopEdgeSlope(cornerCoords) - targetBottomEdgeSlope(cornerCoords)) / 2;
 			// slope allowed threshhold determined from angle table
-			if (Math.abs(slope) > 0.02) {
+			if (Math.abs(slope) > 0.03) {
 				// sloped too much
 				// move parallel to marker to make slope closer to 0
 				super.currentPosition = new Waypoint(0, 0, 90);
-				driveTo(new Waypoint(0.25, 0, 90));
+				driveTo(new Waypoint(slope > 0 ? -0.25 : 0.25, 0, 90));
 			} else {
 				// nothing more needed except to drive straight at marker
 				aligned = true;
@@ -606,29 +630,31 @@ public class ooPurtyColors extends Planner {
 		return toReturn;
 	}
 
-	private BufferedImage medianFilterRadius2(BufferedImage rawImage) {
-		int imageWidth = rawImage.getWidth();
-		int imageHeight = rawImage.getHeight();
+	private BufferedImage medianFilterRadius2(final BufferedImage rawImage) {
+		final int imageWidth = rawImage.getWidth();
+		final int imageHeight = rawImage.getHeight();
 
-		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
+		final BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
 				BufferedImage.TYPE_INT_RGB);
 
-		WritableRaster raster = toReturn.getRaster()
+		final WritableRaster raster = toReturn.getRaster()
 		.createCompatibleWritableRaster();
 
+		int[] rNeighbors, gNeighbors, bNeighbors;
+		int rMedian, gMedian, bMedian;
 		for (int y = 2; y < imageHeight - 2; ++y) {
 			for (int x = 2; x < imageWidth - 2; ++x) {
-				int[] rNeighbors = whatDoSeventeenNeighborsLookLike(rawImage,
+				rNeighbors = whatDoSeventeenNeighborsLookLike(rawImage,
 						x, y, 0);
-				int[] gNeighbors = whatDoSeventeenNeighborsLookLike(rawImage,
+				gNeighbors = whatDoSeventeenNeighborsLookLike(rawImage,
 						x, y, 1);
-				int[] bNeighbors = whatDoSeventeenNeighborsLookLike(rawImage,
+				bNeighbors = whatDoSeventeenNeighborsLookLike(rawImage,
 						x, y, 2);
 				// get array of nearby pixels' (0, 1, or 2) channel
 
-				int rMedian = medianOfSeventeen(rNeighbors);
-				int gMedian = medianOfSeventeen(gNeighbors);
-				int bMedian = medianOfSeventeen(bNeighbors);
+				rMedian = medianOfSeventeen(rNeighbors);
+				gMedian = medianOfSeventeen(gNeighbors);
+				bMedian = medianOfSeventeen(bNeighbors);
 				// toss that array to median method, get median value back
 				// write median value of that channel to new image at pixel
 				raster.setSample(x, y, 0, rMedian);
@@ -690,12 +716,12 @@ public class ooPurtyColors extends Planner {
 
 	private BufferedImage paintCornersWhite(BufferedImage lonePixelsGone,
 			int[][] cornerCoords) {
-		int imageWidth = lonePixelsGone.getWidth();
-		int imageHeight = lonePixelsGone.getHeight();
-		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
+		final int imageWidth = lonePixelsGone.getWidth();
+		final int imageHeight = lonePixelsGone.getHeight();
+		final BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
 				BufferedImage.TYPE_INT_RGB);
 
-		WritableRaster raster = toReturn.getRaster()
+		final WritableRaster raster = toReturn.getRaster()
 		.createCompatibleWritableRaster();
 
 		int xToPaint;
@@ -752,32 +778,34 @@ public class ooPurtyColors extends Planner {
 	}
 
 
-	private BufferedImage segmentOutAHue(BufferedImage noiseReduced,
-			int targetHue, int targetHueWindow, int minSatToBeUseful) {
-		int imageWidth = noiseReduced.getWidth();
-		int imageHeight = noiseReduced.getHeight();
+	private BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
+			final int targetHue, final int targetHueWindow, final int minSatToBeUseful) {
+		final int imageWidth = noiseReduced.getWidth();
+		final int imageHeight = noiseReduced.getHeight();
 
 		// float notEnoughColorInfoThreshold = 140.0f;
 
-		BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
+		final BufferedImage toReturn = new BufferedImage(imageWidth, imageHeight,
 				BufferedImage.TYPE_INT_RGB);
 
-		WritableRaster raster = toReturn.getRaster()
+		final WritableRaster raster = toReturn.getRaster()
 		.createCompatibleWritableRaster();
 
-		double[][] hueArray = new double[imageWidth][imageHeight];
-		double[][] satArray = new double[imageWidth][imageHeight];
+		final double[][] hueArray = new double[imageWidth][imageHeight];
+		final double[][] satArray = new double[imageWidth][imageHeight];
 		// double maxHueYet = 0; // was intended for normalization
 
 		int targetPixelsWritten = 0;
 
+		int r, g, b;
+		int[] hsv;
 		for (int y = 0; y < imageHeight; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
-				int r = noiseReduced.getRaster().getSample(x, y, 0);
-				int g = noiseReduced.getRaster().getSample(x, y, 1);
-				int b = noiseReduced.getRaster().getSample(x, y, 2);
-				int[] hsv = new int[3];
+				r = noiseReduced.getRaster().getSample(x, y, 0);
+				g = noiseReduced.getRaster().getSample(x, y, 1);
+				b = noiseReduced.getRaster().getSample(x, y, 2);
+				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 
 				hueArray[x][y] = hsv[0];
@@ -824,8 +852,10 @@ public class ooPurtyColors extends Planner {
 	}
 
 	public void showImageAndPauseUntilOkayed(final Image image) {
-		ImageIcon icon = new ImageIcon(image);
-		JOptionPane.showMessageDialog(null, icon);
+		if(showImages) {
+			ImageIcon icon = new ImageIcon(image);
+			JOptionPane.showMessageDialog(null, icon);
+		}
 	}
 
 	private double targetArea(int[][] cornerCoords) {
@@ -884,7 +914,7 @@ public class ooPurtyColors extends Planner {
 	private double targetTopEdgeSlope(int[][] cornerCoords) {
 		double toReturn = ((double) (cornerCoords[0][1] - cornerCoords[1][1]))
 				/ ((double) (cornerCoords[0][0] - cornerCoords[1][0]));
-		toReturn *= -1.0;
+		toReturn *= -1;
 		System.out.println("Slope of top line is " + toReturn);
 		return toReturn;
 	}

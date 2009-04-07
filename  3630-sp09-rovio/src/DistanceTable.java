@@ -82,7 +82,13 @@ public class DistanceTable {
 			}
 		}
 		
-		return -1;
+		if(comparator.compare(value, table[0][column]) <= 0) {
+			return 0;
+		} else {
+			return table.length - 1;
+		}
+		
+//		return -1;
 	}
 	
 	public double getDistance(int pixelHeight) {
