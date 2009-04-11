@@ -115,18 +115,20 @@ public class Robot extends RovioAPI {
 		// System.out.println("...messages sent.");
 	}
 	
-	public void duckAndCover() {
+	public RovioConstants.DriveType duckAndCover() {
 		super.manualDrive(RovioConstants.DriveType.HEAD_DOWN, (int) SPEED);
 		RovioAPI.napTime(1000);
 		this.CURRENTHEADPOS = RovioConstants.DriveType.HEAD_DOWN;
 		RovioAPI.napTime(MILLISBETWEENTURNMESSAGES);
+		return CURRENTHEADPOS;
 	}
 	
-	public void lookMid()
+	public RovioConstants.DriveType lookMid()
 	{
 		super.manualDrive(RovioConstants.DriveType.HEAD_MIDDLE, (int) SPEED);
 		RovioAPI.napTime(1250);
-		this.CURRENTHEADPOS = RovioConstants.DriveType.HEAD_MIDDLE;
+		return this.CURRENTHEADPOS = RovioConstants.DriveType.HEAD_MIDDLE;
+		
 	}
 	
 }
