@@ -74,7 +74,6 @@ public class ooPurtyColors extends Planner {
 	public final float[] edgeDetect3Laplacian = { -1, -1, -1, -1, 8, -1, -1,
 			-1, -1 };
 	public final float[] emboss = { -1, -1, 0, -1, 0, 1, 0, 1, 1 };
-	public RovioConstants.HeadPosition headPosition;
 	public final float[] horizLineDetect = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
 
 	public final float[] interestPointDetector = { -1, -1, -1, -1, 8, -1, -1,
@@ -85,7 +84,6 @@ public class ooPurtyColors extends Planner {
 		super(robot);
 		cameraResolution = RovioConstants.CameraResolution._640x480;
 		cameraBrightness = 6;
-		headPosition = RovioConstants.HeadPosition.LOW;
 
 		try {
 			distanceTable = new DistanceTable(new File("distanceTable.txt"));
@@ -153,13 +151,13 @@ public class ooPurtyColors extends Planner {
 	private BufferedImage[] burstFire(int imagesToTake) {
 		BufferedImage imagesToReturn[] = new BufferedImage[imagesToTake];
 
-		super.robot.whatDoISee(cameraResolution);// this first take is PURPOSELY
+		super.robot.whatDoISee();// this first take is PURPOSELY
 		// not being assigned
 		// anywhere; using it to
 		// throw out first image to
 		// reduce ghosting in avg
 		for (int n = 0; n < imagesToTake; n++){
-			imagesToReturn[n] = super.robot.whatDoISee(cameraResolution);
+			imagesToReturn[n] = super.robot.whatDoISee();
 			RovioAPI.napTime(5);
 		}
 		System.out.println("TAKING NEW PICTURE(S)");
