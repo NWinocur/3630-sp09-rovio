@@ -5,7 +5,7 @@ public class Demo3Automatic extends Planner {
 	private ColorSpace cspace;
 	private Map map;
 	
-	public Demo3Automatic(Robot robot, ColorSpace cspace Map map) {
+	public Demo3Automatic(Robot robot, ColorSpace cspace, Map map) {
 		super(robot);
 		this.cspace = cspace;
 		this.map = map;
