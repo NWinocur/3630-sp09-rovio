@@ -481,10 +481,8 @@ public class ImageProc {
 		int r, g, b;
 		int[] hsv;
 		int satSumSoFar = 0;
-		int diffSumSoFar = 0;
-		int maxSatPossible = 0;
 		int pixelsRecorded = 0;
-		for (int y = 0; y < imageHeight; ++y) {
+		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
 				r = Math.abs(img1.getRaster().getSample(x, y, 0)
@@ -499,16 +497,18 @@ public class ImageProc {
 				raster.setSample(x, y, 1, g);
 				raster.setSample(x, y, 2, b);
 				
-				diffSumSoFar += r + g + b;
-				satSumSoFar += hsv[1];
-				maxSatPossible = Math.max(hsv[1], maxSatPossible);
+				if (1 < hsv[1])
+				{
+					satSumSoFar++;
+					
+				}
 				pixelsRecorded++;
 			}
 		}
 		
-		System.out.println("DiffSum = " + diffSumSoFar + "; alike by "
+		System.out.println("midheight alike by "
 				+ (1.0 - (double) satSumSoFar
-						/ (double) (maxSatPossible * pixelsRecorded)));
+						/ (double) pixelsRecorded));
 		comparison.setData(raster);
 		return comparison;
 	}
