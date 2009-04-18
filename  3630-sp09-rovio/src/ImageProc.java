@@ -1,4 +1,6 @@
+import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 
@@ -57,6 +59,106 @@ public class ImageProc {
 		hsv[1] = (int) (S * 100);
 		hsv[2] = (int) (V * 100);
 	}
+
+	/**
+	 * Change an HSV color to RGB color. We don't bother converting the alpha as
+	 * that stays the same regardless of color space.
+	 * 
+	 * @param h
+	 *            The h component of the color
+	 * @param s
+	 *            The s component of the color
+	 * @param v
+	 *            The v component of the color
+	 * @param rgb
+	 *            An array to return the RGB colour values in code taken from
+	 *            http://www.koders.com/java/
+	 *            fid698452C6AA108615D4A611B52D27A9F5819B39F5.aspx?s=idef%3Atree
+	 */
+	public static void hsv2rgb(float h, float s, float v, float[] rgb) {
+		// final String INVALID_H_MSG =
+		// "Invalid h (it has a value) value when s is zero";
+		float r = 0;
+		float g = 0;
+		float b = 0;
+
+		if (s == 0) {
+			// this color in on the black white center line <=> h = UNDEFINED
+			if (Float.isNaN(h)) {
+				// Achromatic color, there is no hue
+				r = v;
+				g = v;
+				b = v;
+			} else {
+				// throw new IllegalArgumentException(INVALID_H_MSG);
+			}
+		} else {
+			if (h == 360) {
+				// 360 is equiv to 0
+				h = 0;
+			}
+
+			// h is now in [0,6)
+			h = h / 60;
+
+			int i = (int) Math.floor(h);
+			float f = h - i; // f is fractional part of h
+			float p = v * (1 - s);
+			float q = v * (1 - (s * f));
+			float t = v * (1 - (s * (1 - f)));
+
+			switch (i) {
+			case 0:
+				r = v;
+				g = t;
+				b = p;
+
+				break;
+
+			case 1:
+				r = q;
+				g = v;
+				b = p;
+
+				break;
+
+			case 2:
+				r = p;
+				g = v;
+				b = t;
+
+				break;
+
+			case 3:
+				r = p;
+				g = q;
+				b = v;
+
+				break;
+
+			case 4:
+				r = t;
+				g = p;
+				b = v;
+
+				break;
+
+			case 5:
+				r = v;
+				g = p;
+				b = q;
+
+				break;
+			}
+		}
+
+		// now assign everything....
+		rgb[0] = r;
+		rgb[1] = g;
+		rgb[2] = b;
+	}
+
+	  
 	public static void showImage(final Image image) {
 
 		Thread t = new Thread(new Runnable() {
@@ -91,7 +193,8 @@ public class ImageProc {
 
 	public final float[] interestPointKernel = { -1, -1, -1, -1, 8, -1, -1, -1,
 			-1 };
-	private BufferedImage average(BufferedImage[] images) {
+	
+	public BufferedImage average(BufferedImage[] images) {
 
 		int n = images.length;
 
@@ -120,11 +223,8 @@ public class ImageProc {
 				raster.setSample(x, y, 0, Math.round(rsum / n));
 				raster.setSample(x, y, 1, Math.round(gsum / n));
 				raster.setSample(x, y, 2, Math.round(bsum / n));
-
 			}
-
 		average.setData(raster);
-
 		return average;
 	}
 
@@ -142,6 +242,24 @@ public class ImageProc {
 		}
 		return toReturn;
 	}
+	private boolean isColorWorthSegmenting(double hue, double sat) {
+		ColorSpace segmentHelper = new ColorSpace();
+		int targetHueWindow;
+		int targetHue;
+		int minSatToBeUseful;
+		for (int col = 0; col < 5; col++)
+		{
+			targetHue = segmentHelper.getTargetingData(col, 0);
+			targetHueWindow = segmentHelper.getTargetingData(col, 1);
+			minSatToBeUseful = segmentHelper.getTargetingData(col, 2);
+			if ((targetHueWindow > Math.abs(hue - targetHue))
+					&& (minSatToBeUseful < sat)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 * checks if a diagonal line between two opposite corners of a proposed
 	 * quadrilateral mostly contains pixels of approximately the same color,
@@ -196,10 +314,10 @@ public class ImageProc {
 		}
 		return false;
 	}
-
 	public BufferedImage makeSingularRawImage(BufferedImage[] fromOpticsBurst) {
 		return average(fromOpticsBurst);
 	}
+
 	public BufferedImage medianFilterRadius1(BufferedImage rawImage) {
 		int imageWidth = rawImage.getWidth();
 		int imageHeight = rawImage.getHeight();
@@ -318,9 +436,86 @@ public class ImageProc {
 
 	public BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
 		return medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
+	}  
+	
+	/**
+	 * @param img
+	 * @param newW
+	 * @param newH
+	 * @return resized image code taken from
+	 *         http://www.javalobby.org/articles/ultimate-image/?source=archives
+	 *         not sure if it'll ever get used, but I'm curious about whether it
+	 *         could work in case the histogram plan has issues
+	 */
+	public BufferedImage resize(BufferedImage img, int newW, int newH) {
+		int w = img.getWidth();
+		int h = img.getHeight();
+		BufferedImage dimg = new BufferedImage(newW, newH, img.getType());
+		Graphics2D g = dimg.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+				RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.drawImage(img, 0, 0, newW, newH, 0, 0, w, h, null);
+		g.dispose();
+		return dimg;
 	}
 
-	public BufferedImage segmentOutAllHues(final BufferedImage noiseReduced) {
+	/**
+	 * compares two equally-sized bufferedImages in practice, takes absolute
+	 * value of their differences and looks at that result's Intensity
+	 * 
+	 * @param img1
+	 * @param img2
+	 * @return double from 0 to 1. 1 means they're exact same, 0 means one's
+	 *         fullblack and other is fullwhite
+	 */
+	public BufferedImage percentAlike(BufferedImage img1, BufferedImage img2) {
+		final int imageWidth = img1.getWidth();
+		final int imageHeight = img1.getHeight();
+		
+		final BufferedImage comparison = new BufferedImage(imageWidth,
+				imageHeight, BufferedImage.TYPE_INT_RGB);
+
+		final WritableRaster raster = comparison.getRaster()
+				.createCompatibleWritableRaster();
+		
+		int r, g, b;
+		int[] hsv;
+		int satSumSoFar = 0;
+		int diffSumSoFar = 0;
+		int maxSatPossible = 0;
+		int pixelsRecorded = 0;
+		for (int y = 0; y < imageHeight; ++y) {
+
+			for (int x = 0; x < imageWidth; ++x) {
+				r = Math.abs(img1.getRaster().getSample(x, y, 0)
+						- img2.getRaster().getSample(x, y, 0));
+				g = Math.abs(img1.getRaster().getSample(x, y, 1)
+						- img2.getRaster().getSample(x, y, 1));
+				b = Math.abs(img1.getRaster().getSample(x, y, 2)
+						- img2.getRaster().getSample(x, y, 2));
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+				raster.setSample(x, y, 0, r);
+				raster.setSample(x, y, 1, g);
+				raster.setSample(x, y, 2, b);
+				
+				diffSumSoFar += r + g + b;
+				satSumSoFar += hsv[1];
+				maxSatPossible = Math.max(hsv[1], maxSatPossible);
+				pixelsRecorded++;
+			}
+		}
+		
+		System.out.println("DiffSum = " + diffSumSoFar + "; alike by "
+				+ (1.0 - (double) satSumSoFar
+						/ (double) (maxSatPossible * pixelsRecorded)));
+		comparison.setData(raster);
+		return comparison;
+	}
+	
+	public BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
+			final int targetHue, final int targetHueWindow,
+			final int minSatToBeUseful) {
 		final int imageWidth = noiseReduced.getWidth();
 		final int imageHeight = noiseReduced.getHeight();
 
@@ -328,7 +523,7 @@ public class ImageProc {
 				imageHeight, BufferedImage.TYPE_INT_RGB);
 
 		final WritableRaster raster = toReturn.getRaster()
-				.createCompatibleWritableRaster();
+		.createCompatibleWritableRaster();
 
 		final double[][] hueArray = new double[imageWidth][imageHeight];
 		final double[][] satArray = new double[imageWidth][imageHeight];
@@ -349,9 +544,8 @@ public class ImageProc {
 
 				hueArray[x][y] = hsv[0];
 				satArray[x][y] = hsv[1];
-				
-				
-				if (isColorWorthSegmenting(hueArray[x][y], satArray[x][y])) {
+				if (targetHueWindow > Math.abs(hueArray[x][y] - targetHue)
+						&& minSatToBeUseful < satArray[x][y]) {
 					raster.setSample(x, y, 0, r);
 					raster.setSample(x, y, 1, g);
 					raster.setSample(x, y, 2, b);
@@ -368,26 +562,7 @@ public class ImageProc {
 		return toReturn;
 	}
 	
-	private boolean isColorWorthSegmenting(double hue, double sat) {
-		ColorSpace segmentHelper = new ColorSpace();
-		int targetHueWindow;
-		int targetHue;
-		int minSatToBeUseful;
-		for (int col = 0; col < 5; col++)
-		{
-			targetHue = segmentHelper.getTargetingData(col, 0);
-			targetHueWindow = segmentHelper.getTargetingData(col, 1);
-			minSatToBeUseful = segmentHelper.getTargetingData(col, 2);
-			if ((targetHueWindow > Math.abs(hue - targetHue))
-					&& (minSatToBeUseful < sat)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	public BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
-			final int targetHue, final int targetHueWindow,
-			final int minSatToBeUseful) {
+	public BufferedImage segmentOutAllHues(final BufferedImage noiseReduced) {
 		final int imageWidth = noiseReduced.getWidth();
 		final int imageHeight = noiseReduced.getHeight();
 
@@ -395,15 +570,9 @@ public class ImageProc {
 				imageHeight, BufferedImage.TYPE_INT_RGB);
 
 		final WritableRaster raster = toReturn.getRaster()
-		.createCompatibleWritableRaster();
+				.createCompatibleWritableRaster();
 
-		final double[][] hueArray = new double[imageWidth][imageHeight];
-		final double[][] satArray = new double[imageWidth][imageHeight];
-		// double maxHueYet = 0; // was intended for normalization
-
-		int targetPixelsWritten = 0;
-
-		int r, g, b;
+		int r, g, b, h, s;
 		int[] hsv;
 		for (int y = 0; y < imageHeight; ++y) {
 
@@ -414,25 +583,25 @@ public class ImageProc {
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 
-				hueArray[x][y] = hsv[0];
-				satArray[x][y] = hsv[1];
-				if (targetHueWindow > Math.abs(hueArray[x][y] - targetHue)
-						&& minSatToBeUseful < satArray[x][y]) {
+				h = hsv[0];
+				s = hsv[1];
+				
+
+				if (isColorWorthSegmenting(h, s)) {
+
 					raster.setSample(x, y, 0, r);
 					raster.setSample(x, y, 1, g);
 					raster.setSample(x, y, 2, b);
-					targetPixelsWritten++;
 				} else {
 					raster.setSample(x, y, 0, 0);
 					raster.setSample(x, y, 1, 0);
 					raster.setSample(x, y, 2, 0);
 				}
-				// maxHueYet = Math.max(maxHueYet, hueArray[x][y]);
 			}
 		}
 		toReturn.setData(raster);
 		return toReturn;
-	} 
+	}
 
 	public double targetCenterXvsPhotoCenter(Target target) {
 		double targetMidX = target.getCentroid().getX();
@@ -500,4 +669,5 @@ public class ImageProc {
 				channelOfInterest);
 		return toReturn;
 	}
+	
 }
