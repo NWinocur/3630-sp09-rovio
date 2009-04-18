@@ -3,15 +3,23 @@ import java.awt.image.BufferedImage;
 public class Demo3Manual extends Planner {
 	
 	private ColorSpace cspace;
+	private Map map;
 	
 	public Demo3Manual(Robot robot) {
 		super(robot);
 		cspace = new ColorSpace();
+		// hard code numbers in ColorSpace class, instead of auto-calibration
+		cspace.setAllDefaults();
+		this.map = new Map();
 	}
 	
 	public void makeMove() {
 		// open GUI
 		// wait for commands from GUI
+		// run automatic mode
+		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
+		//d.makeMove();
+		// halt
 		while (true) {}
 	}
 	
