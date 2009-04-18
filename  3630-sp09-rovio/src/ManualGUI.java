@@ -32,6 +32,12 @@ public class ManualGUI {
 		this.status.setText("status: " + newStatus);
 	}
 	
+	/** use this to see a GUI mockup */
+	public static void main(String[] args) {
+		ManualGUI g = new ManualGUI(null);
+		g.setStatus("testing");
+	}
+	
 	public JPanel makeMainPanel() {
 		JPanel panel = new JPanel();
 		panel.setPreferredSize(new Dimension(400, 300));
@@ -84,20 +90,14 @@ public class ManualGUI {
 		return panel;
 	}
 	
-	/** use this to see a GUI mockup */
-	public static void main(String[] args) {
-		ManualGUI g = new ManualGUI(null);
-		g.setStatus("testing");
-	}
-	
 	private class ButtonListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			if (e.getActionCommand().equals("driveForward")) {
-				//planner.driveForward();
+				planner.driveForward();
 			} else if (e.getActionCommand().equals("turnLeft")) {
-				//planner.turnLeft();
+				planner.turnLeft();
 			} else if (e.getActionCommand().equals("turnRight")) {
-				//planner.turnRight();
+				planner.turnRight();
 			} else if (e.getActionCommand().equals("mapStop")) {
 				//planner.mapStop();
 			} else if (e.getActionCommand().equals("autoMode")) {
@@ -112,11 +112,11 @@ public class ManualGUI {
 		public void keyReleased(KeyEvent e) {
 			System.out.println(String.format("keyboard event: %d\n", e.getKeyCode()));
 			if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-				//planner.turnLeft();
+				planner.turnLeft();
 			} else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-				//planner.turnRight();
+				planner.turnRight();
 			} else if (e.getKeyCode() == KeyEvent.VK_UP) {
-				//planner.driveForward();
+				planner.driveForward();
 			} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 				//planner.mapStop();
 			}
