@@ -11,7 +11,7 @@ import javax.swing.JOptionPane;
 
 public class ooPurtyColors extends Planner {
 
-	public static boolean showImages = false;
+	public static boolean showImages = true;
 
 	static public void rgb2hsv(int r, int g, int b, int hsv[]) {
 		// method taken from
@@ -489,17 +489,44 @@ public class ooPurtyColors extends Planner {
 		int confusedTurns = 0;
 
 		boolean finished = false;
-		while (finished == false) {			
+		while (finished == false) {
+			
 			int targetHue = targetingData[targetIntRYGBV][0];
 			int targetHueWindow = targetingData[targetIntRYGBV][1];
 			int minSatToBeUseful = targetingData[targetIntRYGBV][2];
+			/*
+			 * BufferedImage rawImageArray[] = burstFire(burstLength);
+			 * BufferedImage noiseReduced = reduceNoise(rawImageArray);
+			 * showImageAndPauseUntilOkayed(noiseReduced);
+			 * 
+			 * BufferedImage hueSegmented = segmentOutAHue(noiseReduced,
+			 * targetHue, targetHueWindow, minSatToBeUseful);
+			 */
 
-			BufferedImage rawImageArray[] = burstFire(burstLength);
-			BufferedImage noiseReduced = reduceNoise(rawImageArray);
-			showImageAndPauseUntilOkayed(noiseReduced);
+			// testing ImageProc below
+			ImageProc myIP = new ImageProc();
+			BufferedImage rawImageArray1[] = burstFire(burstLength);
+			BufferedImage averaged1 = myIP.average(rawImageArray1);
+			BufferedImage noiseReduced1 = myIP.reduceNoise(averaged1);
+			BufferedImage hueSegmented1 = myIP.segmentOutAllHues(noiseReduced1);
+			BufferedImage shrunken1 = myIP.resize(hueSegmented1, 128, 80);
+			showImageAndPauseUntilOkayed(shrunken1);
+			BufferedImage rawImageArray2[] = burstFire(burstLength);
+			BufferedImage averaged2 = myIP.average(rawImageArray2);
+			BufferedImage noiseReduced2 = myIP.reduceNoise(averaged2);
+			BufferedImage hueSegmented2 = myIP.segmentOutAllHues(noiseReduced2);
+			BufferedImage shrunken2 = myIP.resize(hueSegmented2, 128, 80);
+			System.out.println("Comparing...");
+			showImageAndPauseUntilOkayed(myIP
+					.percentAlike(shrunken1, shrunken2));
+			showImage(shrunken1);
+			showImageAndPauseUntilOkayed(shrunken2);
+			
+			
+			BufferedImage hueSegmented = hueSegmented2;
 
-			BufferedImage hueSegmented = segmentOutAHue(noiseReduced,
-					targetHue, targetHueWindow, minSatToBeUseful);
+			// test stuff for ImageProc above
+			
 			if (null == hueSegmented) {
 				System.out.println("Target not sighted, thus not segmented");
 				confusedTurns = lookConfused(confusedTurns);
