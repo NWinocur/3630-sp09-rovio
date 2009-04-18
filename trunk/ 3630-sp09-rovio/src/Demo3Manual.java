@@ -7,6 +7,7 @@ public class Demo3Manual extends Planner {
 	
 	public Demo3Manual(Robot robot) {
 		super(robot);
+		super.currentPosition = new Waypoint(0, 0, 0);
 		cspace = new ColorSpace();
 		// hard code numbers in ColorSpace class, instead of auto-calibration
 		cspace.setAllDefaults();
@@ -15,12 +16,35 @@ public class Demo3Manual extends Planner {
 	
 	public void makeMove() {
 		// open GUI
+		new ManualGUI(this);
 		// wait for commands from GUI
 		// run automatic mode
 		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
 		//d.makeMove();
 		// halt
 		while (true) {}
+	}
+	
+	public void driveForward() {
+		double d = 0.125;
+		double angle = super.currentPosition.getTheta() * (Math.PI / ((double) 180));
+		double dx = d * Math.cos(angle);
+		double dy = d * Math.sin(angle);
+		Waypoint tempGoal = new Waypoint(super.currentPosition.getX() + dx,
+			super.currentPosition.getY() + dy, super.currentPosition.getTheta());
+		super.driveTo(tempGoal);
+	}
+	
+	public void turnLeft() {
+		double angle = super.currentPosition.getTheta() + 90;
+		super.driveTo(new Waypoint(super.currentPosition.getX(),
+			super.currentPosition.getY(), angle));
+	}
+	
+	public void turnRight() {
+		double angle = super.currentPosition.getTheta() - 90;
+		super.driveTo(new Waypoint(super.currentPosition.getX(),
+			super.currentPosition.getY(), angle));
 	}
 	
 	/** adds a marker to the map
