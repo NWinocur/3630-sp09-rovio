@@ -7,6 +7,17 @@ public class ColorSpace {
 	/** calibrationData: array of [color][hueSum, frequency, minHue, maxHue, minSat] */
 	private int[][] calibrationData = new int[5][5];
 	
+	public static final int[][] DEFTARGETINGDATA;
+	static {
+		DEFTARGETINGDATA = new int[][] {
+			{18,15,30},
+			{60,15,30},
+			{120,20,22},
+			{200,50,10},
+			{275,20,5}
+		};
+	}
+	
 	public ColorSpace() {
 		for (int color = 0; color < 5; color++) {
 			calibrationData[color][4] = 255;
