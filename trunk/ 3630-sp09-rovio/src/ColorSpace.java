@@ -6,23 +6,19 @@ public class ColorSpace {
 	private int[][] targetingData = new int[5][3];
 	/** calibrationData: array of [color][hueSum, frequency, minHue, maxHue, minSat] */
 	private int[][] calibrationData = new int[5][5];
-	
-	public static final int[][] DEFTARGETINGDATA;
-	static {
-		DEFTARGETINGDATA = new int[][] {
-			{18,15,30},
-			{60,15,30},
-			{120,20,22},
-			{200,50,10},
-			{275,20,5}
-		};
-	}
+
+	/*
+	 * public static final int[][] DEFTARGETINGDATA; static { DEFTARGETINGDATA =
+	 * new int[][] { {18,15,30}, {60,15,30}, {120,20,22}, {200,50,10},
+	 * {275,20,5} }; }
+	 */
 	
 	public ColorSpace() {
 		for (int color = 0; color < 5; color++) {
 			calibrationData[color][4] = 255;
 			calibrationData[color][2] = 355;
 		}
+		setAllDefaults();
 	}
 	
 	/** use this method to get any piece of color targeting info
