@@ -320,6 +320,71 @@ public class ImageProc {
 		return medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
 	}
 
+	public BufferedImage segmentOutAllHues(final BufferedImage noiseReduced) {
+		final int imageWidth = noiseReduced.getWidth();
+		final int imageHeight = noiseReduced.getHeight();
+
+		final BufferedImage toReturn = new BufferedImage(imageWidth,
+				imageHeight, BufferedImage.TYPE_INT_RGB);
+
+		final WritableRaster raster = toReturn.getRaster()
+				.createCompatibleWritableRaster();
+
+		final double[][] hueArray = new double[imageWidth][imageHeight];
+		final double[][] satArray = new double[imageWidth][imageHeight];
+		// double maxHueYet = 0; // was intended for normalization
+
+		// int targetPixelsWritten = 0;
+
+		int r, g, b;
+		int[] hsv;
+		for (int y = 0; y < imageHeight; ++y) {
+
+			for (int x = 0; x < imageWidth; ++x) {
+				r = noiseReduced.getRaster().getSample(x, y, 0);
+				g = noiseReduced.getRaster().getSample(x, y, 1);
+				b = noiseReduced.getRaster().getSample(x, y, 2);
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+
+				hueArray[x][y] = hsv[0];
+				satArray[x][y] = hsv[1];
+				
+				
+				if (isColorWorthSegmenting(hueArray[x][y], satArray[x][y])) {
+					raster.setSample(x, y, 0, r);
+					raster.setSample(x, y, 1, g);
+					raster.setSample(x, y, 2, b);
+					// targetPixelsWritten++;
+				} else {
+					raster.setSample(x, y, 0, 0);
+					raster.setSample(x, y, 1, 0);
+					raster.setSample(x, y, 2, 0);
+				}
+				// maxHueYet = Math.max(maxHueYet, hueArray[x][y]);
+			}
+		}
+		toReturn.setData(raster);
+		return toReturn;
+	}
+	
+	private boolean isColorWorthSegmenting(double hue, double sat) {
+		ColorSpace segmentHelper = new ColorSpace();
+		int targetHueWindow;
+		int targetHue;
+		int minSatToBeUseful;
+		for (int col = 0; col < 5; col++)
+		{
+			targetHue = segmentHelper.getTargetingData(col, 0);
+			targetHueWindow = segmentHelper.getTargetingData(col, 1);
+			minSatToBeUseful = segmentHelper.getTargetingData(col, 2);
+			if ((targetHueWindow > Math.abs(hue - targetHue))
+					&& (minSatToBeUseful < sat)) {
+				return true;
+			}
+		}
+		return false;
+	}
 	public BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
 			final int targetHue, final int targetHueWindow,
 			final int minSatToBeUseful) {
@@ -364,11 +429,6 @@ public class ImageProc {
 				}
 				// maxHueYet = Math.max(maxHueYet, hueArray[x][y]);
 			}
-		}
-		if (25 > targetPixelsWritten) {
-			System.out
-			.println("WARNING: desired target too small or not seen, segment returning null");
-			return null;
 		}
 		toReturn.setData(raster);
 		return toReturn;
