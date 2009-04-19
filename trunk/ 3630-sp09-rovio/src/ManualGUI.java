@@ -40,7 +40,7 @@ public class ManualGUI {
 	/** use this to change the status displayed in the GUI */
 	public void setStatus(String newStatus) {
 		this.status.setText("status: " + newStatus);
-		centerPanel.updateUI();
+		this.status.paintImmediately(0, 0, status.getSize().width, status.getSize().height);
 	}
 	
 	/** use this to see a GUI mockup */
@@ -146,10 +146,10 @@ public class ManualGUI {
 					planner.turnRight();
 				} else if (e.getActionCommand().equals("mapStop")) {
 					setStatus("map stop");
-					//planner.mapStop();
+					planner.mapStop();
 				} else if (e.getActionCommand().equals("autoMode")) {
 					setStatus("automatic mode");
-					//planner.autoMode();
+					planner.autoMode();
 					// sleep forever (ignore GUI inputs)
 					isAsleep = true;
 				}
@@ -177,7 +177,7 @@ public class ManualGUI {
 					planner.driveForward();
 				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					setStatus("map stop");
-					//planner.mapStop();
+					planner.mapStop();
 				}
 			}
 		}
