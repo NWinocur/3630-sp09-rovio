@@ -9,13 +9,14 @@ import java.util.TimerTask;
 public class ManualGUI {
 	
 	/** time in miliseconds to ignore keyboard and button events after an event */
-	public static final long INPUT_DELAY = 300;
+	public static final long INPUT_DELAY = 5000;
 	
 	private Demo3Manual planner;
 	private ButtonListener bl;
 	private KeyBoardListener kl;
 	private boolean isAsleep;
 	
+	private JPanel centerPanel;
 	private JButton mapStopButton;
 	private JButton autoModeButton;
 	private JLabel status;
@@ -39,6 +40,7 @@ public class ManualGUI {
 	/** use this to change the status displayed in the GUI */
 	public void setStatus(String newStatus) {
 		this.status.setText("status: " + newStatus);
+		centerPanel.updateUI();
 	}
 	
 	/** use this to see a GUI mockup */
@@ -72,11 +74,11 @@ public class ManualGUI {
 	}
 	
 	public JPanel center() {
-		JPanel panel = new JPanel();
-		panel.setPreferredSize(new Dimension(300, 480));
+		centerPanel = new JPanel();
+		centerPanel.setPreferredSize(new Dimension(300, 480));
 		this.status = new JLabel("status: waiting for command");
-		panel.add(this.status);
-		return panel;
+		centerPanel.add(this.status);
+		return centerPanel;
 	}
 	
 	public JPanel south() {
