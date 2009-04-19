@@ -460,18 +460,18 @@ public class ImageProc {
 	}
 
 	/**
-	 * takes in bufferedImage, looks at middle "tictactoe" area, returns int
-	 * corresponding to highest-scoring hue , 0-4 for rygbv if none of the above
-	 * hues takes up area in center big enough, returns -1 area expected to be
-	 * taken up in center defined by double percentage in long-named variable
-	 * inside look
+	 * takes in ALREADY-HUE-SEGMENTED bufferedImage, looks at middle "tictactoe"
+	 * area, returns int corresponding to highest-scoring hue , 0-4 for rygbv.
+	 * If none of the above hues takes up area in center big enough, returns -1.
+	 * Area expected to be taken up in center is defined by double percentage in
+	 * long-named variable inside "hueMustFillThisPercentOfCenterToBeReturned"
 	 * 
 	 * 
 	 * @param imgWithCenteredTarget
 	 * @return
 	 */
 	public int colorOfTargetInFocus(BufferedImage imgWithCenteredTarget) {
-		final double hueMustFillThisPercentOfCenterToBeReturned = 0.5;
+		final double hueMustFillThisPercentOfCenterToBeReturned = 1.0 / 3.0;
 		final int imageWidth = imgWithCenteredTarget.getWidth();
 		final int imageHeight = imgWithCenteredTarget.getHeight();
 
@@ -598,9 +598,9 @@ public class ImageProc {
 		int[] hsv;
 		int satSumSoFar = 0;
 		int pixelsRecorded = 0;
-		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
+		for (int y = (int) Math.round(imageHeight / 4.0); y < imageHeight * 2.0 / 3.0; ++y) {
 
-			for (int x = (int) Math.round(imageWidth / 3.0); x < imageWidth * 2.0 / 3.0; ++x) {
+			for (int x = (int) Math.round(imageWidth * 6.0 / 16.0); x < imageWidth * 10.0 / 16.0; ++x) {
 				r = Math.abs(img1.getRaster().getSample(x, y, 0)
 						- img2.getRaster().getSample(x, y, 0));
 				g = Math.abs(img1.getRaster().getSample(x, y, 1)
@@ -613,7 +613,7 @@ public class ImageProc {
 				raster.setSample(x, y, 1, g);
 				raster.setSample(x, y, 2, b);
 
-				if (1 < hsv[1])
+				if (0 < hsv[1])
 				{
 					satSumSoFar++;
 
@@ -671,7 +671,7 @@ public class ImageProc {
 				raster.setSample(x, y, 1, g);
 				raster.setSample(x, y, 2, b);
 
-				if (1 < hsv[1])
+				if (0 < hsv[1])
 				{
 					satSumSoFar++;
 
