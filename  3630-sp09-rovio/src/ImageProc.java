@@ -158,7 +158,7 @@ public class ImageProc {
 		rgb[2] = b;
 	}
 
-	  
+
 	public static void showImage(final Image image) {
 
 		Thread t = new Thread(new Runnable() {
@@ -193,7 +193,7 @@ public class ImageProc {
 
 	public final float[] interestPointKernel = { -1, -1, -1, -1, 8, -1, -1, -1,
 			-1 };
-	
+
 	public BufferedImage average(BufferedImage[] images) {
 
 		int n = images.length;
@@ -296,7 +296,7 @@ public class ImageProc {
 		while (currentX < rightCorner.getX()) {
 			currentY = (int) Math
 			.round((slope * (currentX - leftCorner.getX()))
-							+ leftCorner.getY());
+					+ leftCorner.getY());
 			r = i.getRaster().getSample(currentX, currentY, 0);
 			g = i.getRaster().getSample(currentX, currentY, 1);
 			b = i.getRaster().getSample(currentX, currentY, 2);
@@ -437,7 +437,7 @@ public class ImageProc {
 	public BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
 		return medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
 	}  
-	
+
 	/**
 	 * @param img
 	 * @param newW
@@ -460,24 +460,198 @@ public class ImageProc {
 	}
 
 	/**
-	 * compares two equally-sized bufferedImages in practice, takes absolute
-	 * value of their differences and looks at that result's Intensity
+	 * takes in bufferedImage, looks at middle "tictactoe" area, returns int
+	 * corresponding to highest-scoring hue , 0-4 for rygbv if none of the above
+	 * hues takes up area in center big enough, returns -1 area expected to be
+	 * taken up in center defined by double percentage in long-named variable
+	 * inside look
+	 * 
+	 * 
+	 * @param imgWithCenteredTarget
+	 * @return
+	 */
+	public int colorOfTargetInFocus(BufferedImage imgWithCenteredTarget) {
+		final double hueMustFillThisPercentOfCenterToBeReturned = 0.5;
+		final int imageWidth = imgWithCenteredTarget.getWidth();
+		final int imageHeight = imgWithCenteredTarget.getHeight();
+
+		ColorSpace ourColorSpace = new ColorSpace();
+		int r, g, b,h,s;
+		int[] hsv;
+		int[] colorScores = { 0, 0, 0, 0, 0 };
+		int pixelsRecorded = 0;
+		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
+
+			for (int x = (int) Math.round(imageWidth / 3.0); x < imageWidth * 2.0 / 3.0; ++x) {
+				r = imgWithCenteredTarget.getRaster().getSample(x, y, 0);
+				g = imgWithCenteredTarget.getRaster().getSample(x, y, 1);
+				b = imgWithCenteredTarget.getRaster().getSample(x, y, 2);
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+				h=hsv[0];
+				s = hsv[1];
+				for (int i = 0; i < colorScores.length; i++) {
+					if (Math.abs(ourColorSpace.getTargetingData(i, 0) - h) < ourColorSpace
+							.getTargetingData(i, 1)
+							&& ourColorSpace.getTargetingData(i, 2) < s) {
+						colorScores[i]++;
+					}
+				}
+				pixelsRecorded++;
+			}
+		}
+		
+		int highScoringColor = 1;
+		int highScore = -1;
+		for (int i = 0; i < colorScores.length; i++) {
+			if (colorScores[i] > highScore) {
+				highScoringColor = i;
+				highScore = colorScores[i];
+			}
+		}
+
+		if ((double) colorScores[highScoringColor] / pixelsRecorded < hueMustFillThisPercentOfCenterToBeReturned) {
+			return -1;
+		} else {
+			return highScoringColor;
+
+		}
+	}
+
+	private boolean isRed(int hue, int sat)
+	{
+		ColorSpace ourColorSpace = new ColorSpace();
+		if (Math.abs(ourColorSpace.getTargetingData(0, 0) - hue) < ourColorSpace
+				.getTargetingData(0, 1)
+				&& ourColorSpace.getTargetingData(0, 2) < sat) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isYellow(int hue, int sat) {
+		ColorSpace ourColorSpace = new ColorSpace();
+		if (Math.abs(ourColorSpace.getTargetingData(1, 0) - hue) < ourColorSpace
+				.getTargetingData(1, 1)
+				&& ourColorSpace.getTargetingData(1, 2) < sat) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isGreen(int hue, int sat) {
+		ColorSpace ourColorSpace = new ColorSpace();
+		if (Math.abs(ourColorSpace.getTargetingData(2, 0) - hue) < ourColorSpace
+				.getTargetingData(2, 1)
+				&& ourColorSpace.getTargetingData(2, 2) < sat) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isBlue(int hue, int sat) {
+		ColorSpace ourColorSpace = new ColorSpace();
+		if (Math.abs(ourColorSpace.getTargetingData(3, 0) - hue) < ourColorSpace
+				.getTargetingData(3, 1)
+				&& ourColorSpace.getTargetingData(3, 2) < sat) {
+			return true;
+		}
+		return false;
+	}
+
+	private boolean isPurple(int hue, int sat) {
+		ColorSpace ourColorSpace = new ColorSpace();
+		if (Math.abs(ourColorSpace.getTargetingData(4, 0) - hue) < ourColorSpace
+				.getTargetingData(4, 1)
+				&& ourColorSpace.getTargetingData(4, 2) < sat) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * compares middle "tic-tac-toe box" of two equally-sized bufferedImages; in
+	 * practice, takes absolute value of their differences and looks at that
+	 * result's Intensity
 	 * 
 	 * @param img1
 	 * @param img2
-	 * @return double from 0 to 1. 1 means they're exact same, 0 means one's
-	 *         fullblack and other is fullwhite
+	 * @return double that *should* be 0 to 1, untested. Higher #'s mean they're
+	 *         same, lower means one's fullblack and other's fullwhite
 	 */
-	public BufferedImage percentAlike(BufferedImage img1, BufferedImage img2) {
+	public BufferedImage focusCompare(BufferedImage img1,
+			BufferedImage img2) {
+		if (img1.getWidth() != img2.getWidth() || img1.getHeight() != img2.getHeight()){
+			System.out
+			.println("WARNING: focusCompare wasn't given equal sized images");
+		}
 		final int imageWidth = img1.getWidth();
 		final int imageHeight = img1.getHeight();
-		
+
 		final BufferedImage comparison = new BufferedImage(imageWidth,
 				imageHeight, BufferedImage.TYPE_INT_RGB);
 
 		final WritableRaster raster = comparison.getRaster()
-				.createCompatibleWritableRaster();
-		
+		.createCompatibleWritableRaster();
+
+		int r, g, b;
+		int[] hsv;
+		int satSumSoFar = 0;
+		int pixelsRecorded = 0;
+		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
+
+			for (int x = (int) Math.round(imageWidth / 3.0); x < imageWidth * 2.0 / 3.0; ++x) {
+				r = Math.abs(img1.getRaster().getSample(x, y, 0)
+						- img2.getRaster().getSample(x, y, 0));
+				g = Math.abs(img1.getRaster().getSample(x, y, 1)
+						- img2.getRaster().getSample(x, y, 1));
+				b = Math.abs(img1.getRaster().getSample(x, y, 2)
+						- img2.getRaster().getSample(x, y, 2));
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+				raster.setSample(x, y, 0, r);
+				raster.setSample(x, y, 1, g);
+				raster.setSample(x, y, 2, b);
+
+				if (1 < hsv[1])
+				{
+					satSumSoFar++;
+
+				}
+				pixelsRecorded++;
+			}
+		}
+		System.out.println("focus onethird alike by "
+				+ (1.0 - (double) satSumSoFar / (double) pixelsRecorded));
+		comparison.setData(raster);
+		return comparison;
+	}
+	/**
+	 * compares middle-height band of two equally-sized bufferedImages; in
+	 * practice, takes absolute value of their differences and looks at that
+	 * result's Intensity
+	 * 
+	 * @param img1
+	 * @param img2
+	 * @return double that *should* be 0 to 1, untested. Higher #'s mean they're
+	 *         same, lower means one's fullblack and other's fullwhite
+	 */
+	public BufferedImage widescreenCompare(BufferedImage img1,
+			BufferedImage img2) {
+		if (img1.getWidth() != img2.getWidth()
+				|| img1.getHeight() != img2.getHeight()) {
+			System.out
+			.println("WARNING: widescreenCompare wasn't given equal sized images");
+		}
+		final int imageWidth = img1.getWidth();
+		final int imageHeight = img1.getHeight();
+
+		final BufferedImage comparison = new BufferedImage(imageWidth,
+				imageHeight, BufferedImage.TYPE_INT_RGB);
+
+		final WritableRaster raster = comparison.getRaster()
+		.createCompatibleWritableRaster();
+
 		int r, g, b;
 		int[] hsv;
 		int satSumSoFar = 0;
@@ -496,23 +670,24 @@ public class ImageProc {
 				raster.setSample(x, y, 0, r);
 				raster.setSample(x, y, 1, g);
 				raster.setSample(x, y, 2, b);
-				
+
 				if (1 < hsv[1])
 				{
 					satSumSoFar++;
-					
+
 				}
 				pixelsRecorded++;
 			}
 		}
-		
+
+
 		System.out.println("midheight alike by "
 				+ (1.0 - (double) satSumSoFar
 						/ (double) pixelsRecorded));
 		comparison.setData(raster);
 		return comparison;
 	}
-	
+
 	public BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
 			final int targetHue, final int targetHueWindow,
 			final int minSatToBeUseful) {
@@ -561,7 +736,7 @@ public class ImageProc {
 		toReturn.setData(raster);
 		return toReturn;
 	}
-	
+
 	public BufferedImage segmentOutAllHues(final BufferedImage noiseReduced) {
 		final int imageWidth = noiseReduced.getWidth();
 		final int imageHeight = noiseReduced.getHeight();
@@ -570,7 +745,7 @@ public class ImageProc {
 				imageHeight, BufferedImage.TYPE_INT_RGB);
 
 		final WritableRaster raster = toReturn.getRaster()
-				.createCompatibleWritableRaster();
+		.createCompatibleWritableRaster();
 
 		int r, g, b, h, s;
 		int[] hsv;
@@ -585,7 +760,7 @@ public class ImageProc {
 
 				h = hsv[0];
 				s = hsv[1];
-				
+
 
 				if (isColorWorthSegmenting(h, s)) {
 
@@ -626,7 +801,7 @@ public class ImageProc {
 		}
 		return toReturn;
 	}
-	
+
 	private int[] whatDoSeventeenNeighborsLookLike(BufferedImage imageToCheck,
 			int x, int y, int channelOfInterest) {
 		// x and y passed here MUST be 0 > variable > image's max of that
@@ -669,5 +844,5 @@ public class ImageProc {
 				channelOfInterest);
 		return toReturn;
 	}
-	
+
 }

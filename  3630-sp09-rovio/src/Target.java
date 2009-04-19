@@ -23,6 +23,14 @@ public class Target {
 		bottomRight = botR;
 		bottomLeft = botL;
 	}
+	
+	public Target(Color tColor) {
+		targetColor = tColor;
+		topLeft = null;
+		topRight = null;
+		bottomRight = null;
+		bottomLeft = null;
+	}
 
 	/**
 	 * @return the topLeft
