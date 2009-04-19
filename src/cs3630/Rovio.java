@@ -3,19 +3,12 @@
  */
 package cs3630;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.Authenticator;
-import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
 
 /**
  * @author John Crawford
@@ -44,8 +37,29 @@ public class Rovio extends Authenticator {
 			e.printStackTrace();
 		}
 		
+		try {
+			myRovio.doTurnTest();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
+	public void doTurnTest() throws Exception {
+		this.turnByNumber(RotateDirection.LEFT, Utils.angle180);
+		this.pause(sleepAmountInMillis);
+		this.pause(10000);
+		this.turnByNumber(RotateDirection.RIGHT, Utils.angle180);
+		this.pause(sleepAmountInMillis);
+		this.pause(10000);
+		
+		System.out.println("Turning with angle of 1\n");
+		
+		this.turnByNumber(RotateDirection.LEFT, 1);
+		this.pause(sleepAmountInMillis);
+		this.turnByNumber(RotateDirection.LEFT, 1);
+		this.pause(sleepAmountInMillis);
+	}
+
 	public Rovio(String ipAddress, String username, String password) throws MalformedURLException {
 		
 		this.ipAddress = ipAddress;
@@ -65,10 +79,16 @@ public class Rovio extends Authenticator {
 
 	public String doCommand(Command command) throws IOException {
 		
+		return this.doCommand(command.toString());
+		
+	}
+	
+	public String doCommand(String command) throws IOException {
+		
 		String response;
 		
 		// Build the command
-		URL commandURL = new URL(this.rovioBaseURL, command.toString());
+		URL commandURL = new URL(this.rovioBaseURL, command);
 		// Open an input stream using the command URL
 		BufferedReader responseReader = new BufferedReader(new InputStreamReader(commandURL.openStream()));
 		// Read the response from the input stream
@@ -84,6 +104,18 @@ public class Rovio extends Authenticator {
 		
 	}
 	
+	public BufferedImage getImage() throws IOException {
+		
+		BufferedImage image;
+		
+		// Build the command
+		URL commandURL = new URL(this.rovioBaseURL, "Jpeg/CamImg[0000].jpg");
+		// Read the response from the input stream
+		image = ImageIO.read(commandURL.openStream());
+		return image;
+		
+	}
+	
 	public String doCommandAndPrint(Command command) throws IOException {
 		
 		String response = this.doCommand(command);
@@ -96,13 +128,14 @@ public class Rovio extends Authenticator {
 		Thread.sleep(sleepMillis);
 	}
 	
+	@SuppressWarnings("unused")
 	private ResponseCode parseRespCode(String cmdResponse) {
 		
 		cmdResponse = cmdResponse.substring(cmdResponse.length() - 1);
 		return ResponseCode.get(Integer.parseInt(cmdResponse));
 	}
 	
-	public int turnByPulse(RotateDirection dir, int numPulses) throws Exception {
+	public void turnByPulse(RotateDirection dir, int numPulses) throws Exception {
 		
 		if(dir == RotateDirection.LEFT) {
 			for(int i = 0; i < numPulses; i++){
@@ -116,10 +149,23 @@ public class Rovio extends Authenticator {
 				this.pause(this.sleepAmountInMillis);
 			}
 		}
-		return 0;
-		
 	}
 
+	public void turnByNumber(RotateDirection dir, int numAngle) throws Exception {
+		
+		String cmdLeft = "rev.cgi?Cmd=nav&action=18&drive=18&speed=" + Command.speed + "&angle=" + numAngle;
+		String cmdRight = "rev.cgi?Cmd=nav&action=18&drive=17&speed=" + Command.speed + "&angle=" + numAngle;
+		
+		if(dir == RotateDirection.LEFT) {
+				this.doCommand(cmdLeft);
+				this.pause(this.sleepAmountInMillis);
+		}
+		else {		// dir == RotateDirection.RIGHT
+				this.doCommand(cmdRight);
+				this.pause(this.sleepAmountInMillis);
+		}
+	}
+	
 	public enum ResponseCode {
 		SUCCESS(0),
 		FAILURE(1),
@@ -194,7 +240,8 @@ public class Rovio extends Authenticator {
 		GET_LOG("GetLog.cgi"),
 		GET_VER("GetVer.cgi"),
 		REBOOT("Reboot.cgi"),
-		GET_DATA("GetData.cgi");
+		GET_DATA("GetData.cgi"),
+		GET_IMAGE("Jpeg/CamImg[0000].jpg");
 		
 		private String command;
 		public static final int speed = 9;
