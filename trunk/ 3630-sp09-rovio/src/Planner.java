@@ -1,3 +1,5 @@
+import java.awt.image.BufferedImage;
+
 /**
 * This should be implemented by any class that can control a robot to
 * follow a path that leads to a goal.
@@ -10,12 +12,28 @@ public abstract class Planner {
 	protected Waypoint currentPosition;
 	private final int shortSleepAmountInMillis = 2000;
 	private final int longSleepAmountInMillis = 7000;
-	
+	private final int burstLength = 4;
 	
 	public Planner(Robot robot) {
 		this.robot = robot;
 	}
 	
+	public BufferedImage[] burstFire() {
+		BufferedImage imagesToReturn[] = new BufferedImage[burstLength];
+
+		this.robot.whatDoISee();// this first take is PURPOSELY
+		// not being assigned
+		// anywhere; using it to
+		// throw out first image to
+		// reduce ghosting in avg
+		for (int n = 0; n < burstLength; n++) {
+			imagesToReturn[n] = this.robot.whatDoISee();
+			RovioAPI.napTime(5);
+		}
+		System.out.println("TAKING NEW PICTURE(S)");
+		return imagesToReturn;
+
+	}
 
 	public abstract void makeMove();
 	
