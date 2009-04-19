@@ -32,6 +32,25 @@ public class Target {
 		bottomLeft = null;
 	}
 
+	public Target(int color, Corner topL, Corner topR, Corner botR, Corner botL) {
+		switch (color) {
+		case 0:
+			targetColor = Color.red;
+		case 1:
+			targetColor = Color.yellow;
+		case 2:
+			targetColor = Color.green;
+		case 3:
+			targetColor = Color.blue;
+		case 4:
+			targetColor = Color.magenta;
+		}
+		topLeft = topL;
+		topRight = topR;
+		bottomRight = botR;
+		bottomLeft = botL;
+	}
+
 	/**
 	 * @return the topLeft
 	 */
