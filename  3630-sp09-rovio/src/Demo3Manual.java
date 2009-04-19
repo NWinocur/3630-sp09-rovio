@@ -4,6 +4,7 @@ public class Demo3Manual extends Planner {
 	
 	private ColorSpace cspace;
 	private Map map;
+	private ImageProc iproc;
 	
 	public Demo3Manual(Robot robot) {
 		super(robot);
@@ -12,15 +13,13 @@ public class Demo3Manual extends Planner {
 		// hard code numbers in ColorSpace class, instead of auto-calibration
 		cspace.setAllDefaults();
 		this.map = new Map();
+		this.iproc = new ImageProc();
 	}
 	
 	public void makeMove() {
 		// open GUI
 		new ManualGUI(this);
 		// wait for commands from GUI
-		// run automatic mode
-		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
-		//d.makeMove();
 		// halt
 		while (true) {}
 	}
@@ -51,10 +50,60 @@ public class Demo3Manual extends Planner {
 			super.currentPosition.getY(), angle));
 	}
 	
-	/** adds a marker to the map
-	* @param color the human selected color of this marker [r, y, g, b, v] */
-	public void learnMarker(int color, double x, double y) {
-		
+	public void autoMode() {
+		System.out.println(this.map.toString());
+		// initialize automatic mode
+		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
+		//d.makeMove();
+		System.out.println("automatic mode finished, now halting");
+	}
+	
+	/** spins, taking pictures and building the map */
+	public void mapStop() {
+		// make a copy of the waypoint
+		double keyAngle = currentPosition.getTheta();
+		Waypoint location = new Waypoint(currentPosition.getX(),
+			currentPosition.getY(), keyAngle);
+		// get the key target color
+		///////////// FIX THIS /////////////////////////
+		/////// the ImageProc object is already initialized in the constructor and
+		/////// is in a field in this class
+		/////// set it to red for now:
+		int keyTargetColor = 0;
+		// make the map stop
+		MapStop stop = new MapStop(location, keyTargetColor);
+		// spin while making map views
+		double currentAngle = keyAngle + 90 + 45;
+		if (currentAngle >= 360) {
+			currentAngle -= 360;
+		}
+		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+		this.learnView(stop, currentAngle);
+		currentAngle += 45;
+		if (currentAngle >= 360) {
+			currentAngle -= 360;
+		}
+		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+		this.learnView(stop, currentAngle);
+		currentAngle += 45;
+		if (currentAngle >= 360) {
+			currentAngle -= 360;
+		}
+		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+		this.learnView(stop, currentAngle);
+		currentAngle += 90 + 45;
+		if (currentAngle >= 360) {
+			currentAngle -= 360;
+		}
+		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+	}
+	
+	public void learnView(MapStop stop, double angle) {
+		MapView view = new MapView((int) angle);
+		// adjust histograms from image
+		////////// FIX THIS ///////////////
+		////// get an image, segmented
+		////// get each histogram and adjust numbers
 	}
 	
 	/** adds color data used for color calibration
