@@ -140,7 +140,7 @@ public class ooPurtyColors extends Planner {
 				.round((double) (((cornerCoords[0][1] + cornerCoords[1][1]) / 2) + ((cornerCoords[2][1] + cornerCoords[3][1]) / 2)) / 2));
 	}
 
-	private BufferedImage[] burstFire(int imagesToTake) {
+	public BufferedImage[] burstFire(int imagesToTake) {
 		BufferedImage imagesToReturn[] = new BufferedImage[imagesToTake];
 
 		super.robot.whatDoISee();// this first take is PURPOSELY

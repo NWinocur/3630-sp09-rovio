@@ -55,7 +55,7 @@ public class Demo3Manual extends Planner {
 		// initialize automatic mode
 		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
 		//d.makeMove();
-		System.out.println("automatic mode finished, now halting");
+		System.out.println("automatic mode finished");
 	}
 	
 	/** spins, taking pictures and building the map */
@@ -65,11 +65,9 @@ public class Demo3Manual extends Planner {
 		Waypoint location = new Waypoint(currentPosition.getX(),
 			currentPosition.getY(), keyAngle);
 		// get the key target color
-		///////////// FIX THIS /////////////////////////
-		/////// the ImageProc object is already initialized in the constructor and
-		/////// is in a field in this class
-		/////// set it to red for now:
-		int keyTargetColor = 0;
+		BufferedImage rawImageArray[] = burstFire();
+		Target keyTarget = iproc.targetFromRawImg(iproc.average(rawImageArray));
+		int keyTargetColor = keyTarget.getTargetColorInt();
 		// make the map stop
 		MapStop stop = new MapStop(location, keyTargetColor);
 		// spin while making map views
@@ -101,14 +99,17 @@ public class Demo3Manual extends Planner {
 	public void learnView(MapStop stop, double angle) {
 		MapView view = new MapView((int) angle);
 		stop.addView(view);
-		// adjust histograms from image
-		////////// FIX THIS ///////////////
-		////// get an image, segmented
-		////// get each histogram and adjust numbers
 		Histogram hLeft = view.getHistogram(MapView.LEFT);
 		Histogram hMiddle = view.getHistogram(MapView.MIDDLE);
 		Histogram hRight = view.getHistogram(MapView.RIGHT);
-		// example: hLeft.incrementFreq(0); where 0 is red
+		
+		BufferedImage rawImageArray[] = burstFire();
+		BufferedImage noiseReduced = iproc.reduceNoise(iproc
+				.average(rawImageArray));
+		BufferedImage allHueSegmented = iproc.segmentOutAllHues(noiseReduced);
+		iproc.histOf(allHueSegmented, 0, hLeft);
+		iproc.histOf(allHueSegmented, 1, hMiddle);
+		iproc.histOf(allHueSegmented, 2, hRight);
 	}
 	
 	/** adds color data used for color calibration

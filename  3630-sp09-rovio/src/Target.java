@@ -85,6 +85,21 @@ public class Target {
 	public Color getTargetColor() {
 		return this.targetColor;
 	}
+	
+	public int getTargetColorInt() {
+		if (this.targetColor == Color.red)
+			return 0;
+		else if (this.targetColor == Color.yellow)
+			return 1;
+		else if (this.targetColor == Color.green)
+			return 2;
+		else if (this.targetColor == Color.blue)
+			return 3;
+		else if (this.targetColor == Color.magenta)
+			return 4;
+		else
+			return -1;
+	}
 
 	public int getHeight() {
 		int avgYofTop2Corners = (int) (Math.round((double)(topLeft.getY() + topRight.getY() )/ 2));
