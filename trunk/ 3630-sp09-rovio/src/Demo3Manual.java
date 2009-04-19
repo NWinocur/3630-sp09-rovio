@@ -26,7 +26,11 @@ public class Demo3Manual extends Planner {
 	}
 	
 	public void driveForward() {
-		double d = 0.125;
+		driveForward(0.125);
+	}
+
+	public void driveForward(double metersToDriveForward) {
+		double d = metersToDriveForward;
 		double angle = super.currentPosition.getTheta() * (Math.PI / ((double) 180));
 		double dx = d * Math.cos(angle);
 		double dy = d * Math.sin(angle);

@@ -518,7 +518,8 @@ public class ooPurtyColors extends Planner {
 			BufferedImage shrunken2 = myIP.resize(hueSegmented2, 20, 15);
 			System.out.println("Comparing...");
 			showImageAndPauseUntilOkayed(myIP
-					.focusCompare(shrunken1, shrunken2));
+					.widescreenCompare(shrunken1,
+					shrunken2));
 			System.out.println("Color detector thinks color "
 					+ myIP.colorOfTargetInFocus(hueSegmented2)
 					+ " is in center");

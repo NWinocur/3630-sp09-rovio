@@ -39,7 +39,7 @@ public class ColorSpace {
 		targetingData[1][2] = 30;
 		targetingData[2][0] = 120;
 		targetingData[2][1] = 20;
-		targetingData[2][2] = 22;
+		targetingData[2][2] = 15;
 		targetingData[3][0] = 200;
 		targetingData[3][1] = 50;
 		targetingData[3][2] = 10;
