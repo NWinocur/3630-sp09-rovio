@@ -29,6 +29,10 @@ public class ColorSpace {
 		return targetingData[color][choice];
 	}
 	
+	public int[][] getTargetingData() {
+		return targetingData;
+	}
+	
 	/** useful for manually settings values */
 	public void setAllDefaults() {
 		targetingData[0][0] = 18;

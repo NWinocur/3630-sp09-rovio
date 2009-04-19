@@ -2,6 +2,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 
 import javax.swing.ImageIcon;
@@ -208,6 +209,11 @@ public class ImageProc {
 		WritableRaster raster = average.getRaster()
 		.createCompatibleWritableRaster();
 
+		Raster[] rasters = new Raster[images.length];
+		for (int r = 0; r < images.length; r++) {
+			rasters[r] = images[r].getRaster();
+		}
+		
 		for (int y = 0; y < h; ++y)
 			for (int x = 0; x < w; ++x) {
 
@@ -216,9 +222,9 @@ public class ImageProc {
 				float bsum = 0.0f;
 
 				for (int i = 0; i < n; ++i) {
-					rsum = rsum + images[i].getRaster().getSample(x, y, 0);
-					gsum = gsum + images[i].getRaster().getSample(x, y, 1);
-					bsum = bsum + images[i].getRaster().getSample(x, y, 2);
+					rsum = rsum + rasters[i].getSample(x, y, 0);
+					gsum = gsum + rasters[i].getSample(x, y, 1);
+					bsum = bsum + rasters[i].getSample(x, y, 2);
 				}
 				raster.setSample(x, y, 0, Math.round(rsum / n));
 				raster.setSample(x, y, 1, Math.round(gsum / n));
@@ -243,6 +249,38 @@ public class ImageProc {
 		return toReturn;
 	}
 	
+	public void histOf(BufferedImage imgToHist, int third, Histogram hist) {
+		final int imageWidth = imgToHist.getWidth();
+		ColorSpace ourColorSpace = new ColorSpace();
+		Raster rasterToHist = imgToHist.getRaster();
+		int r, g, b, h, s;
+		int[] hsv;
+		int yLesser = 0;
+		int yGreater = imgToHist.getHeight();
+		int xLesser = third * (int) Math.round(imageWidth / 3.0);
+		int xGreater = (third+1) * (int) Math.round(imageWidth / 3.0);
+
+		for (int y = yLesser; y < yGreater; ++y) {
+
+			for (int x = xLesser; x < xGreater; ++x) {
+				r = rasterToHist.getSample(x, y, 0);
+				g = rasterToHist.getSample(x, y, 1);
+				b = rasterToHist.getSample(x, y, 2);
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+				h = hsv[0];
+				s = hsv[1];
+				for (int i = 0; i < 5; i++) {
+					if (Math.abs(ourColorSpace.getTargetingData(i, 0) - h) < ourColorSpace
+							.getTargetingData(i, 1)
+							&& ourColorSpace.getTargetingData(i, 2) < s) {
+						hist.incrementFreq(i);
+					}
+				}
+			}
+		}
+	}
+	
 	/**
 	 * takes in ALREADY-HUE-SEGMENTED bufferedImage, looks at middle "tictactoe"
 	 * area, returns int corresponding to highest-scoring hue , 0-4 for rygbv.
@@ -258,7 +296,9 @@ public class ImageProc {
 		final double hueMustFillThisPercentOfCenterToBeReturned = 1.0 / 3.0;
 		final int imageWidth = imgWithCenteredTarget.getWidth();
 		final int imageHeight = imgWithCenteredTarget.getHeight();
-
+		final Raster rasterWithCenteredTarget = imgWithCenteredTarget
+				.getRaster();
+		
 		ColorSpace ourColorSpace = new ColorSpace();
 		int r, g, b,h,s;
 		int[] hsv;
@@ -267,9 +307,9 @@ public class ImageProc {
 		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
 
 			for (int x = (int) Math.round(imageWidth / 3.0); x < imageWidth * 2.0 / 3.0; ++x) {
-				r = imgWithCenteredTarget.getRaster().getSample(x, y, 0);
-				g = imgWithCenteredTarget.getRaster().getSample(x, y, 1);
-				b = imgWithCenteredTarget.getRaster().getSample(x, y, 2);
+				r = rasterWithCenteredTarget.getSample(x, y, 0);
+				g = rasterWithCenteredTarget.getSample(x, y, 1);
+				b = rasterWithCenteredTarget.getSample(x, y, 2);
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 				h=hsv[0];
@@ -302,6 +342,9 @@ public class ImageProc {
 		}
 	}
 
+	private long euclideanDistance(int i, int j, int x, int y) {
+		return Math.round(Math.sqrt((i - x) * (i - x) + (j - y) * (j - y)));
+	}
 	/**
 	 * compares middle "tic-tac-toe box" of two equally-sized bufferedImages; in
 	 * practice, takes absolute value of their differences and looks at that
@@ -320,6 +363,9 @@ public class ImageProc {
 		}
 		final int imageWidth = img1.getWidth();
 		final int imageHeight = img1.getHeight();
+		
+		final Raster rast1 = img1.getRaster();
+		final Raster rast2 = img2.getRaster();
 
 		final BufferedImage comparison = new BufferedImage(imageWidth,
 				imageHeight, BufferedImage.TYPE_INT_RGB);
@@ -334,12 +380,12 @@ public class ImageProc {
 		for (int y = (int) Math.round(imageHeight / 4.0); y < imageHeight * 2.0 / 3.0; ++y) {
 
 			for (int x = (int) Math.round(imageWidth * 6.0 / 16.0); x < imageWidth * 10.0 / 16.0; ++x) {
-				r = Math.abs(img1.getRaster().getSample(x, y, 0)
-						- img2.getRaster().getSample(x, y, 0));
-				g = Math.abs(img1.getRaster().getSample(x, y, 1)
-						- img2.getRaster().getSample(x, y, 1));
-				b = Math.abs(img1.getRaster().getSample(x, y, 2)
-						- img2.getRaster().getSample(x, y, 2));
+				r = Math.abs(rast1.getSample(x, y, 0)
+						- rast2.getSample(x, y, 0));
+				g = Math.abs(rast1.getSample(x, y, 1)
+						- rast2.getSample(x, y, 1));
+				b = Math.abs(rast1.getSample(x, y, 2)
+						- rast2.getSample(x, y, 2));
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 				raster.setSample(x, y, 0, r);
@@ -358,15 +404,6 @@ public class ImageProc {
 				+ (1.0 - (double) satSumSoFar / (double) pixelsRecorded));
 		comparison.setData(raster);
 		return comparison;
-	}
-	private boolean isBlue(int hue, int sat) {
-		ColorSpace ourColorSpace = new ColorSpace();
-		if (Math.abs(ourColorSpace.getTargetingData(3, 0) - hue) < ourColorSpace
-				.getTargetingData(3, 1)
-				&& ourColorSpace.getTargetingData(3, 2) < sat) {
-			return true;
-		}
-		return false;
 	}
 
 	private int howLonelyAmI(final BufferedImage imageToCheck, final int x,
@@ -394,83 +431,14 @@ public class ImageProc {
 		return numBlankNeighbors;
 	}
 
-	private long euclideanDistance(int i, int j, int x, int y) {
-		return Math.round(Math.sqrt((i - x) * (i - x) + (j - y) * (j - y)));
-	}
-	
-	public Target targetFromAllHueSegmentedImg(BufferedImage allHueSegmented) {
-		int seeminglyDesirableColor = colorOfTargetInFocus(allHueSegmented);
-		BufferedImage singleHueSegmented = segmentOutAHue(allHueSegmented,
-				seeminglyDesirableColor);
-		singleHueSegmented = reduceNoise(singleHueSegmented);
-		return targetFromSingleHueSegmentedImg(singleHueSegmented,
-				seeminglyDesirableColor);
-	}
-	
-	public Target targetFromNoiseReducedImage(BufferedImage noiseReduced)
-	{
-		return targetFromAllHueSegmentedImg(segmentOutAllHues(noiseReduced));
-	}
-	
-	public Target targetFromRawImg(BufferedImage rawImg) {
-		return targetFromNoiseReducedImage(reduceNoise(rawImg));
-	}
-	
-	private BufferedImage segmentOutAHue(BufferedImage noiseReduced,
-			int colorOfTargetInFocus) {
-		ColorSpace segHelpCSpace = new ColorSpace();
-		return segmentOutAHue(noiseReduced, segHelpCSpace.getTargetingData(
-				colorOfTargetInFocus, 0), segHelpCSpace.getTargetingData(
-				colorOfTargetInFocus, 1), segHelpCSpace.getTargetingData(
-				colorOfTargetInFocus, 2));
-	}
-
-	public Target targetFromSingleHueSegmentedImg(
-			final BufferedImage oneTargetInFrame,
-			int color) {
-		final int imageWidth = oneTargetInFrame.getWidth();
-		final int imageHeight = oneTargetInFrame.getHeight();
-
-		// initialize corner coordinates to their opposites
-		// the imminent for loop should overwrite them with real answers,
-		// but initializing them prevents error it could get from fullblack img
-		Corner topLeft = new Corner(imageWidth, imageHeight);
-		Corner topRight = new Corner(0, imageHeight);
-		Corner bottomLeft = new Corner(imageWidth, 0);
-		Corner bottomRight = new Corner(0, 0);
-		
-		// initialize "best" scores to worst scores possible for overwriting
-		double topLeftScoreBest = topLeft.distance(bottomRight);
-		double topRightScoreBest = topLeftScoreBest;
-		double bottomLeftScoreBest = topLeftScoreBest;
-		double bottomRightScoreBest = topLeftScoreBest;
-
-		for (int y = 1; y < imageHeight - 1; ++y) {
-			for (int x = 1; x < imageWidth - 1; ++x) {
-				if (howLonelyAmI(oneTargetInFrame, x, y) <= 7) {
-					long topLeftScoreHere, topRightScoreHere, bottomLeftScoreHere, bottomRightScoreHere;
-					if (topLeftScoreBest > (topLeftScoreHere = euclideanDistance(
-							0, 0, x, y))) {
-						topLeftScoreBest = topLeftScoreHere;
-						topLeft.setLocation(x, y);
-					} else if (topRightScoreBest > (topRightScoreHere = euclideanDistance(
-							imageWidth, 0, x, y))) {
-						topRightScoreBest = topRightScoreHere;
-						topRight.setLocation(x, y);
-					} else if (bottomLeftScoreBest > (bottomLeftScoreHere = euclideanDistance(
-							0, imageHeight, x, y))) {
-						bottomLeftScoreBest = bottomLeftScoreHere;
-						bottomLeft.setLocation(x, y);
-					} else if (bottomRightScoreBest > (bottomRightScoreHere = euclideanDistance(
-							imageWidth, imageHeight, x, y))) {
-						bottomRightScoreBest = bottomRightScoreHere;
-						bottomRight.setLocation(x, y);
-					}
-				}
-			}
+	private boolean isBlue(int hue, int sat) {
+		ColorSpace ourColorSpace = new ColorSpace();
+		if (Math.abs(ourColorSpace.getTargetingData(3, 0) - hue) < ourColorSpace
+				.getTargetingData(3, 1)
+				&& ourColorSpace.getTargetingData(3, 2) < sat) {
+			return true;
 		}
-		return new Target(color, bottomRight, bottomRight, bottomRight,
-				bottomRight);
+		return false;
 	}
 	
 	private boolean isColorWorthSegmenting(double hue, double sat) {
@@ -490,7 +458,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-
+	
 	/**
 	 * checks if a diagonal line between two opposite corners of a proposed
 	 * quadrilateral mostly contains pixels of approximately the same color,
@@ -545,7 +513,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-
+	
 	private boolean isGreen(int hue, int sat) {
 		ColorSpace ourColorSpace = new ColorSpace();
 		if (Math.abs(ourColorSpace.getTargetingData(2, 0) - hue) < ourColorSpace
@@ -555,7 +523,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-
+	
 	private boolean isPurple(int hue, int sat) {
 		ColorSpace ourColorSpace = new ColorSpace();
 		if (Math.abs(ourColorSpace.getTargetingData(4, 0) - hue) < ourColorSpace
@@ -575,10 +543,8 @@ public class ImageProc {
 			return true;
 		}
 		return false;
-	}  
+	}
 	
-	
-
 	private boolean isYellow(int hue, int sat) {
 		ColorSpace ourColorSpace = new ColorSpace();
 		if (Math.abs(ourColorSpace.getTargetingData(1, 0) - hue) < ourColorSpace
@@ -685,7 +651,9 @@ public class ImageProc {
 				max = array[i];
 		}
 		return max;
-	}
+	}  
+	
+	
 
 	private int medianOfSeventeen(int[] array) {
 		int max, maxIndex;
@@ -733,6 +701,16 @@ public class ImageProc {
 		g.dispose();
 		return dimg;
 	}
+
+	private BufferedImage segmentOutAHue(BufferedImage noiseReduced,
+			int colorOfTargetInFocus) {
+		ColorSpace segHelpCSpace = new ColorSpace();
+		return segmentOutAHue(noiseReduced, segHelpCSpace.getTargetingData(
+				colorOfTargetInFocus, 0), segHelpCSpace.getTargetingData(
+				colorOfTargetInFocus, 1), segHelpCSpace.getTargetingData(
+				colorOfTargetInFocus, 2));
+	}
+
 	public BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
 			final int targetHue, final int targetHueWindow,
 			final int minSatToBeUseful) {
@@ -742,8 +720,9 @@ public class ImageProc {
 		final BufferedImage toReturn = new BufferedImage(imageWidth,
 				imageHeight, BufferedImage.TYPE_INT_RGB);
 
-		final WritableRaster raster = toReturn.getRaster()
+		final WritableRaster rasterToReturn = toReturn.getRaster()
 		.createCompatibleWritableRaster();
+		final Raster noiseReducedRaster = noiseReduced.getRaster();
 
 		final double[][] hueArray = new double[imageWidth][imageHeight];
 		final double[][] satArray = new double[imageWidth][imageHeight];
@@ -756,9 +735,9 @@ public class ImageProc {
 		for (int y = 0; y < imageHeight; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
-				r = noiseReduced.getRaster().getSample(x, y, 0);
-				g = noiseReduced.getRaster().getSample(x, y, 1);
-				b = noiseReduced.getRaster().getSample(x, y, 2);
+				r = noiseReducedRaster.getSample(x, y, 0);
+				g = noiseReducedRaster.getSample(x, y, 1);
+				b = noiseReducedRaster.getSample(x, y, 2);
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 
@@ -766,19 +745,19 @@ public class ImageProc {
 				satArray[x][y] = hsv[1];
 				if (targetHueWindow > Math.abs(hueArray[x][y] - targetHue)
 						&& minSatToBeUseful < satArray[x][y]) {
-					raster.setSample(x, y, 0, r);
-					raster.setSample(x, y, 1, g);
-					raster.setSample(x, y, 2, b);
+					rasterToReturn.setSample(x, y, 0, r);
+					rasterToReturn.setSample(x, y, 1, g);
+					rasterToReturn.setSample(x, y, 2, b);
 					// targetPixelsWritten++;
 				} else {
-					raster.setSample(x, y, 0, 0);
-					raster.setSample(x, y, 1, 0);
-					raster.setSample(x, y, 2, 0);
+					rasterToReturn.setSample(x, y, 0, 0);
+					rasterToReturn.setSample(x, y, 1, 0);
+					rasterToReturn.setSample(x, y, 2, 0);
 				}
 				// maxHueYet = Math.max(maxHueYet, hueArray[x][y]);
 			}
 		}
-		toReturn.setData(raster);
+		toReturn.setData(rasterToReturn);
 		return toReturn;
 	}
 
@@ -792,15 +771,17 @@ public class ImageProc {
 
 		final WritableRaster raster = toReturn.getRaster()
 		.createCompatibleWritableRaster();
-
+		final Raster noiseReducedRaster = noiseReduced.getRaster();
+		
 		int r, g, b, h, s;
 		int[] hsv;
 		for (int y = 0; y < imageHeight; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
-				r = noiseReduced.getRaster().getSample(x, y, 0);
-				g = noiseReduced.getRaster().getSample(x, y, 1);
-				b = noiseReduced.getRaster().getSample(x, y, 2);
+				
+				r = noiseReducedRaster.getSample(x, y, 0);
+				g = noiseReducedRaster.getSample(x, y, 1);
+				b = noiseReducedRaster.getSample(x, y, 2);
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 
@@ -831,6 +812,71 @@ public class ImageProc {
 		return targetMidX - 320;
 	}
 
+	public Target targetFromAllHueSegmentedImg(BufferedImage allHueSegmented) {
+		int seeminglyDesirableColor = colorOfTargetInFocus(allHueSegmented);
+		BufferedImage singleHueSegmented = segmentOutAHue(allHueSegmented,
+				seeminglyDesirableColor);
+		singleHueSegmented = reduceNoise(singleHueSegmented);
+		return targetFromSingleHueSegmentedImg(singleHueSegmented,
+				seeminglyDesirableColor);
+	}
+	public Target targetFromNoiseReducedImage(BufferedImage noiseReduced)
+	{
+		return targetFromAllHueSegmentedImg(segmentOutAllHues(noiseReduced));
+	}
+
+	public Target targetFromRawImg(BufferedImage rawImg) {
+		return targetFromNoiseReducedImage(reduceNoise(rawImg));
+	}
+
+	public Target targetFromSingleHueSegmentedImg(
+			final BufferedImage oneTargetInFrame,
+			int color) {
+		final int imageWidth = oneTargetInFrame.getWidth();
+		final int imageHeight = oneTargetInFrame.getHeight();
+
+		// initialize corner coordinates to their opposites
+		// the imminent for loop should overwrite them with real answers,
+		// but initializing them prevents error it could get from fullblack img
+		Corner topLeft = new Corner(imageWidth, imageHeight);
+		Corner topRight = new Corner(0, imageHeight);
+		Corner bottomLeft = new Corner(imageWidth, 0);
+		Corner bottomRight = new Corner(0, 0);
+		
+		// initialize "best" scores to worst scores possible for overwriting
+		double topLeftScoreBest = topLeft.distance(bottomRight);
+		double topRightScoreBest = topLeftScoreBest;
+		double bottomLeftScoreBest = topLeftScoreBest;
+		double bottomRightScoreBest = topLeftScoreBest;
+
+		for (int y = 1; y < imageHeight - 1; ++y) {
+			for (int x = 1; x < imageWidth - 1; ++x) {
+				if (howLonelyAmI(oneTargetInFrame, x, y) <= 7) {
+					long topLeftScoreHere, topRightScoreHere, bottomLeftScoreHere, bottomRightScoreHere;
+					if (topLeftScoreBest > (topLeftScoreHere = euclideanDistance(
+							0, 0, x, y))) {
+						topLeftScoreBest = topLeftScoreHere;
+						topLeft.setLocation(x, y);
+					} else if (topRightScoreBest > (topRightScoreHere = euclideanDistance(
+							imageWidth, 0, x, y))) {
+						topRightScoreBest = topRightScoreHere;
+						topRight.setLocation(x, y);
+					} else if (bottomLeftScoreBest > (bottomLeftScoreHere = euclideanDistance(
+							0, imageHeight, x, y))) {
+						bottomLeftScoreBest = bottomLeftScoreHere;
+						bottomLeft.setLocation(x, y);
+					} else if (bottomRightScoreBest > (bottomRightScoreHere = euclideanDistance(
+							imageWidth, imageHeight, x, y))) {
+						bottomRightScoreBest = bottomRightScoreHere;
+						bottomRight.setLocation(x, y);
+					}
+				}
+			}
+		}
+		return new Target(color, bottomRight, bottomRight, bottomRight,
+				bottomRight);
+	}
+
 	private int[] whatDoNineNeighborsLookLike(BufferedImage imageToCheck,
 			int x, int y, int channelOfInterest) {
 		// x and y passed here MUST be 0 > variable > image's max of that
@@ -838,10 +884,11 @@ public class ImageProc {
 		// channel of interest is 0 for r, 1 for g, 2 for b
 		int[] toReturn = new int[9];
 		int indexOfToReturnWeWillWrite = 0;
+		Raster rasterToCheck = imageToCheck.getRaster();
 		for (int suby = y - 1; suby <= y + 1; suby++) {
 			for (int subx = x - 1; subx <= x + 1; subx++) {
-				toReturn[indexOfToReturnWeWillWrite] = imageToCheck.getRaster()
-				.getSample(subx, suby, channelOfInterest);
+				toReturn[indexOfToReturnWeWillWrite] = rasterToCheck.getSample(
+						subx, suby, channelOfInterest);
 				indexOfToReturnWeWillWrite++;
 			}
 		}
@@ -854,39 +901,40 @@ public class ImageProc {
 		// dimension
 		// channel of interest is 0 for r, 1 for g, 2 for b
 		int[] toReturn = new int[17];
-		toReturn[0] = imageToCheck.getRaster().getSample(x - 2, y - 2,
+		final Raster rasterToCheck = imageToCheck.getRaster();
+		toReturn[0] = rasterToCheck.getSample(x - 2, y - 2,
 				channelOfInterest);
-		toReturn[1] = imageToCheck.getRaster().getSample(x, y - 2,
+		toReturn[1] = rasterToCheck.getSample(x, y - 2,
 				channelOfInterest);
-		toReturn[2] = imageToCheck.getRaster().getSample(x + 2, y - 2,
+		toReturn[2] = rasterToCheck.getSample(x + 2, y - 2,
 				channelOfInterest);
-		toReturn[3] = imageToCheck.getRaster().getSample(x - 1, y - 1,
+		toReturn[3] = rasterToCheck.getSample(x - 1, y - 1,
 				channelOfInterest);
-		toReturn[4] = imageToCheck.getRaster().getSample(x, y - 1,
+		toReturn[4] = rasterToCheck.getSample(x, y - 1,
 				channelOfInterest);
-		toReturn[5] = imageToCheck.getRaster().getSample(x + 1, y - 1,
+		toReturn[5] = rasterToCheck.getSample(x + 1, y - 1,
 				channelOfInterest);
-		toReturn[6] = imageToCheck.getRaster().getSample(x - 2, y,
+		toReturn[6] = rasterToCheck.getSample(x - 2, y,
 				channelOfInterest);
-		toReturn[7] = imageToCheck.getRaster().getSample(x - 1, y,
+		toReturn[7] = rasterToCheck.getSample(x - 1, y,
 				channelOfInterest);
-		toReturn[8] = imageToCheck.getRaster().getSample(x, y,
+		toReturn[8] = rasterToCheck.getSample(x, y,
 				channelOfInterest);
-		toReturn[9] = imageToCheck.getRaster().getSample(x + 1, y,
+		toReturn[9] = rasterToCheck.getSample(x + 1, y,
 				channelOfInterest);
-		toReturn[10] = imageToCheck.getRaster().getSample(x + 2, y,
+		toReturn[10] = rasterToCheck.getSample(x + 2, y,
 				channelOfInterest);
-		toReturn[11] = imageToCheck.getRaster().getSample(x - 1, y + 1,
+		toReturn[11] = rasterToCheck.getSample(x - 1, y + 1,
 				channelOfInterest);
-		toReturn[12] = imageToCheck.getRaster().getSample(x, y + 1,
+		toReturn[12] = rasterToCheck.getSample(x, y + 1,
 				channelOfInterest);
-		toReturn[13] = imageToCheck.getRaster().getSample(x + 1, y + 1,
+		toReturn[13] = rasterToCheck.getSample(x + 1, y + 1,
 				channelOfInterest);
-		toReturn[14] = imageToCheck.getRaster().getSample(x - 2, y + 2,
+		toReturn[14] = rasterToCheck.getSample(x - 2, y + 2,
 				channelOfInterest);
-		toReturn[15] = imageToCheck.getRaster().getSample(x, y + 2,
+		toReturn[15] = rasterToCheck.getSample(x, y + 2,
 				channelOfInterest);
-		toReturn[16] = imageToCheck.getRaster().getSample(x + 2, y + 2,
+		toReturn[16] = rasterToCheck.getSample(x + 2, y + 2,
 				channelOfInterest);
 		return toReturn;
 	}
@@ -910,6 +958,8 @@ public class ImageProc {
 		}
 		final int imageWidth = img1.getWidth();
 		final int imageHeight = img1.getHeight();
+		final Raster rast1 = img1.getRaster();
+		final Raster rast2 = img2.getRaster();
 
 		final BufferedImage comparison = new BufferedImage(imageWidth,
 				imageHeight, BufferedImage.TYPE_INT_RGB);
@@ -924,12 +974,12 @@ public class ImageProc {
 		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
-				r = Math.abs(img1.getRaster().getSample(x, y, 0)
-						- img2.getRaster().getSample(x, y, 0));
-				g = Math.abs(img1.getRaster().getSample(x, y, 1)
-						- img2.getRaster().getSample(x, y, 1));
-				b = Math.abs(img1.getRaster().getSample(x, y, 2)
-						- img2.getRaster().getSample(x, y, 2));
+				r = Math.abs(rast1.getSample(x, y, 0)
+						- rast2.getSample(x, y, 0));
+				g = Math.abs(rast1.getSample(x, y, 1)
+						- rast2.getSample(x, y, 1));
+				b = Math.abs(rast1.getSample(x, y, 2)
+						- rast2.getSample(x, y, 2));
 				hsv = new int[3];
 				rgb2hsv(r, g, b, hsv);
 				raster.setSample(x, y, 0, r);
