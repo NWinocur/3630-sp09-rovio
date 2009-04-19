@@ -75,7 +75,7 @@ public abstract class Planner {
 			currentPosition.setTheta(currentPosition.getTheta() + amountTurned);// did turn towards goal
 														// theta, update theta
 //			RovioAPI.napTime(longSleepAmountInMillis);
-			 if (Math.abs(currentPosition.distance(goalPoint)) > 0.1) {
+			if (Math.abs(currentPosition.distance(goalPoint)) > 0.2) {
 				driveTo(goalPoint);
 			}
 		}

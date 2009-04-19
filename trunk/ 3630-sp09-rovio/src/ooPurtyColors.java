@@ -509,16 +509,19 @@ public class ooPurtyColors extends Planner {
 			BufferedImage averaged1 = myIP.average(rawImageArray1);
 			BufferedImage noiseReduced1 = myIP.reduceNoise(averaged1);
 			BufferedImage hueSegmented1 = myIP.segmentOutAllHues(noiseReduced1);
-			BufferedImage shrunken1 = myIP.resize(hueSegmented1, 128, 80);
+			BufferedImage shrunken1 = myIP.resize(hueSegmented1, 20, 15);
 			showImageAndPauseUntilOkayed(shrunken1);
 			BufferedImage rawImageArray2[] = burstFire(burstLength);
 			BufferedImage averaged2 = myIP.average(rawImageArray2);
 			BufferedImage noiseReduced2 = myIP.reduceNoise(averaged2);
 			BufferedImage hueSegmented2 = myIP.segmentOutAllHues(noiseReduced2);
-			BufferedImage shrunken2 = myIP.resize(hueSegmented2, 128, 80);
+			BufferedImage shrunken2 = myIP.resize(hueSegmented2, 20, 15);
 			System.out.println("Comparing...");
 			showImageAndPauseUntilOkayed(myIP
-					.percentAlike(shrunken1, shrunken2));
+					.focusCompare(shrunken1, shrunken2));
+			System.out.println("Color detector thinks color "
+					+ myIP.colorOfTargetInFocus(hueSegmented2)
+					+ " is in center");
 			showImage(shrunken1);
 			showImageAndPauseUntilOkayed(shrunken2);
 			

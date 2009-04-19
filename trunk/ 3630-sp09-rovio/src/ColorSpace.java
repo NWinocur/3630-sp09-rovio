@@ -74,7 +74,7 @@ public class ColorSpace {
 				int g = i.getRaster().getSample(x, y, 1);
 				int b = i.getRaster().getSample(x, y, 2);
 				int[] hsv = new int[3];
-				ooPurtyColors.rgb2hsv(r, g, b, hsv);
+				ImageProc.rgb2hsv(r, g, b, hsv);
 				samplePixel(color, hsv[0], hsv[1]);
 			}
 		}
