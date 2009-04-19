@@ -100,10 +100,15 @@ public class Demo3Manual extends Planner {
 	
 	public void learnView(MapStop stop, double angle) {
 		MapView view = new MapView((int) angle);
+		stop.addView(view);
 		// adjust histograms from image
 		////////// FIX THIS ///////////////
 		////// get an image, segmented
 		////// get each histogram and adjust numbers
+		Histogram hLeft = view.getHistogram(MapView.LEFT);
+		Histogram hMiddle = view.getHistogram(MapView.MIDDLE);
+		Histogram hRight = view.getHistogram(MapView.RIGHT);
+		// example: hLeft.incrementFreq(0); where 0 is red
 	}
 	
 	/** adds color data used for color calibration
