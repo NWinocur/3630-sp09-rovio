@@ -15,6 +15,22 @@ public class MapStop {
 		this.views = new MapView[NUM_VIEWS];
 	}
 	
+	public int getKeyTargetColor() {
+		return this.keyTargetColor;
+	}
+	
+	public MapView[] getViews() {
+		MapView[] a = new MapView[3];
+		a[0] = this.getViewAt(90+45);
+		a[1] = this.getViewAt(180);
+		a[2] = this.getViewAt(180+45);
+		return a;
+	}
+	
+	public Waypoint getLocation() {
+		return this.location;
+	}
+	
 	/** adds a MapView to this MapStop, be sure to add exactly NUM_VIEWS views */
 	public void addView(MapView view) {
 		if (this.viewCount < NUM_VIEWS) {
