@@ -106,6 +106,7 @@ public class Demo3Automatic extends Planner {
 		{
 			return null;
 		}
+		return null;
 	}
 
 	private boolean useOldCodeToReturnTrueIfAligned(Target targetPicked) {
@@ -194,7 +195,7 @@ public class Demo3Automatic extends Planner {
 		double biggestTargetArea = -1;
 		int biggestTarget = -1;
 		for (int t = 0; t < potentialTarget.length; t++) {
-			if (potentialTarget[t].cornersSeemValid()) {
+			if (null != potentialTarget[t]) {
 				double areaHere = potentialTarget[t]
 				                                  .getAreaWithRespectToCorners();
 				if (Double.NaN != areaHere && areaHere > biggestTargetArea) {

@@ -36,20 +36,20 @@ public class ColorSpace {
 	/** useful for manually settings values */
 	public void setAllDefaults() {
 		targetingData[0][0] = 18;
-		targetingData[0][1] = 15;
-		targetingData[0][2] = 30;
+		targetingData[0][1] = 29;
+		targetingData[0][2] = 18;
 		targetingData[1][0] = 60;
-		targetingData[1][1] = 15;
-		targetingData[1][2] = 30;
-		targetingData[2][0] = 120;
-		targetingData[2][1] = 20;
-		targetingData[2][2] = 15;
+		targetingData[1][1] = 20;
+		targetingData[1][2] = 16;
+		targetingData[2][0] = 125;
+		targetingData[2][1] = 26;
+		targetingData[2][2] = 7;
 		targetingData[3][0] = 200;
-		targetingData[3][1] = 50;
-		targetingData[3][2] = 10;
-		targetingData[4][0] = 275;
-		targetingData[4][1] = 20;
-		targetingData[4][2] = 5;
+		targetingData[3][1] = 26;
+		targetingData[3][2] = 26;
+		targetingData[4][0] = 270;
+		targetingData[4][1] = 25;
+		targetingData[4][2] = 12;
 	}
 	
 	private void samplePixel(int color, int measuredHue, int sat) {
