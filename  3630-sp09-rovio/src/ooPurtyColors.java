@@ -642,25 +642,25 @@ public class ooPurtyColors extends Planner {
 			// BufferedImage noiseReduced1 = myIP.reduceNoise(averaged1);
 			// BufferedImage hueSegmented1 =
 			// myIP.segmentOutAllHues(noiseReduced1);
-			// BufferedImage shrunken1 = myIP.resize(hueSegmented1, 20, 15);
+			// BufferedImage shrunken1 = myIP.resize(hueSegmented1, 640, 480);
 			// showImageAndPauseUntilOkayed(shrunken1);
 			// BufferedImage rawImageArray2[] = burstFire(burstLength);
 			// BufferedImage averaged2 = myIP.average(rawImageArray2);
 			// BufferedImage noiseReduced2 = myIP.reduceNoise(averaged2);
 			// BufferedImage hueSegmented2 =
 			// myIP.segmentOutAllHues(noiseReduced2);
-			// BufferedImage shrunken2 = myIP.resize(hueSegmented2, 20, 15);
+			// BufferedImage shrunken2 = myIP.resize(hueSegmented2, 640, 480);
 			// System.out.println("Comparing...");
-			// showImageAndPauseUntilOkayed(myIP
-			// .widescreenCompare(shrunken1,
+			// showImageAndPauseUntilOkayed(myIP.widescreenCompare(shrunken1,
 			// shrunken2));
 			// System.out.println("Color detector thinks color "
-			// + myIP.colorOfTargetInFocus(hueSegmented2)
+			// + myIP.dominantColorInFocus(hueSegmented2)
 			// + " is in center");
 			// showImage(shrunken1);
 			// showImageAndPauseUntilOkayed(shrunken2);
 			// BufferedImage hueSegmented = hueSegmented2;
 			// test stuff for ImageProc above
+			
 			BufferedImage rawImageArray[] = burstFire(burstLength);
 			
 			
@@ -669,6 +669,16 @@ public class ooPurtyColors extends Planner {
 			BufferedImage allHueSegmented = oopcIP
 					.segmentOutAllHues(noiseReduced);
 			showImageAndPauseUntilOkayed(allHueSegmented);
+			for (int testCol = 2; testCol < 5; testCol = (testCol + 1) % 5) {
+				int tempIntForTargeting = testCol;
+				int targetHue = targetingData[tempIntForTargeting][0];
+				int targetHueWindow = targetingData[tempIntForTargeting][1];
+				int minSatToBeUseful = targetingData[tempIntForTargeting][2];
+				BufferedImage hueSegmented = oopcIP.reduceNoise(oopcIP
+						.segmentOutAHue(allHueSegmented, targetHue,
+								targetHueWindow, minSatToBeUseful));
+				showImageAndPauseUntilOkayed(hueSegmented);
+			}
 			int tempIntForTargeting = oopcIP
 					.dominantColorInFocus(allHueSegmented);
 			if (0 > tempIntForTargeting || 5 <= tempIntForTargeting) {
