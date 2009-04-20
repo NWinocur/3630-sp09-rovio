@@ -160,4 +160,18 @@ public class Target {
 		return "TargetColor is color#" + getTargetColorInt();
 	}
 
+	public boolean cornersSeemValid() {
+		if (this.topLeft.getX() >= this.topRight.getX()
+				|| this.topLeft.getY() >= this.bottomLeft.getY()
+				|| this.topLeft.getY() >= this.bottomRight.getY())
+			return false;
+		if (this.topRight.getX() <= this.topLeft.getX()
+				|| this.topRight.getY() >= this.bottomLeft.getY()
+				|| this.topRight.getY() >= this.bottomLeft.getY())
+			return false;
+		if (this.bottomLeft.getX() >= this.bottomRight.getX())
+			return false;
+		return true;
+	}
+
 }

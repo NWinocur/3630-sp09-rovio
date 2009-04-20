@@ -883,8 +883,15 @@ public class ImageProc {
 				}
 			}
 		}
-		return new Target(color, bottomRight, bottomRight, bottomRight,
+		
+		// code to check whether these corners correspond to a single target
+		// or whether there's empty black noise/open space between corners
+		// can go here
+		
+		Target toReturn = new Target(color, bottomRight, bottomRight,
+				bottomRight,
 				bottomRight);
+		return toReturn;
 	}
 
 	private int[] whatDoNineNeighborsLookLike(BufferedImage imageToCheck,
