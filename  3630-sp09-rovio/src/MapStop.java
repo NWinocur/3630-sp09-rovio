@@ -19,6 +19,7 @@ public class MapStop {
 	public void addView(MapView view) {
 		if (this.viewCount < NUM_VIEWS) {
 			this.views[this.viewCount] = view;
+			viewCount++;
 		}
 	}
 	
@@ -35,7 +36,9 @@ public class MapStop {
 	
 	public String toString() {
 		String s = "map stop at location ";
-		s = s + String.format("( %f, %f, %d )", location.getX(), location.getY(), location.getTheta());
+		s = s
+				+ String.format("( %f, %f, %f )", location.getX(), location
+						.getY(), location.getTheta());
 		s = s + String.format(" with color %d and views: { ", this.keyTargetColor);
 		for (int i = 0; i < viewCount; i++) {
 			s = s + this.views[i].toString() + " ";

@@ -140,7 +140,7 @@ public class ooPurtyColors extends Planner {
 				.round((double) (((cornerCoords[0][1] + cornerCoords[1][1]) / 2) + ((cornerCoords[2][1] + cornerCoords[3][1]) / 2)) / 2));
 	}
 
-	public BufferedImage[] burstFire(int imagesToTake) {
+	private BufferedImage[] burstFire(int imagesToTake) {
 		BufferedImage imagesToReturn[] = new BufferedImage[imagesToTake];
 
 		super.robot.whatDoISee();// this first take is PURPOSELY
@@ -669,7 +669,8 @@ public class ooPurtyColors extends Planner {
 			BufferedImage allHueSegmented = oopcIP
 					.segmentOutAllHues(noiseReduced);
 			showImageAndPauseUntilOkayed(allHueSegmented);
-			int tempIntForTargeting = oopcIP.colorOfTargetInFocus(allHueSegmented);
+			int tempIntForTargeting = oopcIP
+					.dominantColorInFocus(allHueSegmented);
 			if (0 > tempIntForTargeting || 5 <= tempIntForTargeting) {
 				// no target in focus area,
 				// write code here to try and find any target
