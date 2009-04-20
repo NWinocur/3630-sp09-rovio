@@ -64,6 +64,7 @@ public class Rovio extends Authenticator {
 	public void doImageTest() throws Exception {
 		
 		BufferedImage image = ImageLab.medianFilter(this.getImage());
+		ImagePanel.showImage(image);
 	}
 	
 	public Rovio(String ipAddress, String username, String password) throws MalformedURLException {
