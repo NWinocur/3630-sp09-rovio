@@ -25,12 +25,14 @@ public class Demo3Automatic extends Planner {
 	}
 
 	public void makeMove() {
-		Waypoint currentLocation = null;
 		Waypoint goal = new Waypoint(0, 0, 0);
 		// localize
-		Waypoint localizedLocation = localize();
-		// go to goal
-		driveToGoal(localizedLocation, goal);
+		Waypoint localizedLocation = null;
+		do {
+			localizedLocation = localize();
+		} while (null == localizedLocation);
+		super.currentPosition = localizedLocation;
+		driveToGoal(goal);
 		// halt
 		while (true) {}
 	}
@@ -77,6 +79,7 @@ public class Demo3Automatic extends Planner {
 		if (null == bestTargetInView) {
 			// if no targets in view, look confused to find any target.
 			lookConfused();
+			return null;
 		} else
 		{
 			// if targets in view, pick one. Preferably "best" one.
@@ -90,6 +93,7 @@ public class Demo3Automatic extends Planner {
 		}
 
 		if (useOldCodeToReturnTrueIfAligned(bestTargetInView)) {
+			// //////FIX THIS
 			// we're aligned with a target in here, and we can easily get its
 			// color,
 			// but we don't know *which* target of that color we're aligned
@@ -97,6 +101,10 @@ public class Demo3Automatic extends Planner {
 			// so new code for comparing sensed stuff with mapped stuff goes
 			// here.
 			// Once location is known, return it.
+		}
+		else
+		{
+			return null;
 		}
 	}
 
@@ -201,8 +209,11 @@ public class Demo3Automatic extends Planner {
 			return potentialTarget[biggestTarget];
 	}
 
-	public void driveToGoal(Waypoint current, Waypoint goal) {
-
+	public void driveToGoal(Waypoint goal) {
+		// should decide which waypoint in map is closest to goal waypoint
+		// instead of beelining
+		
+		super.driveTo(goal);
 	}
 
 }
