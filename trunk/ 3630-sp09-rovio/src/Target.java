@@ -36,14 +36,19 @@ public class Target {
 		switch (color) {
 		case 0:
 			targetColor = Color.red;
+			break;
 		case 1:
 			targetColor = Color.yellow;
+			break;
 		case 2:
 			targetColor = Color.green;
+			break;
 		case 3:
 			targetColor = Color.blue;
+			break;
 		case 4:
 			targetColor = Color.magenta;
+			break;
 		}
 		topLeft = topL;
 		topRight = topR;

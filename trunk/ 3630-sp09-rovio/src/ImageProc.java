@@ -19,7 +19,8 @@ public class ImageProc {
 
 	public static final float[] blur2kernel = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 
-	private static final boolean showImages = true;
+	private static final boolean showImages = false;
+	private static final boolean useDiagnosticPainter = false;
 	/**
 	 * Change an HSV color to RGB color. We don't bother converting the alpha as
 	 * that stays the same regardless of color space.
@@ -186,7 +187,7 @@ public class ImageProc {
 			ImageIcon icon = new ImageIcon(image);
 			JOptionPane.showMessageDialog(null, icon);
 		}
-		
+
 	}
 
 	public final float[] edgeDetect1kernel = { -5, -5, -5, -5, 39, -5, -5, -5,
@@ -246,7 +247,7 @@ public class ImageProc {
 	private int checkBothDiagonals(Target perceivedTarget,
 			double desiredCertainty, BufferedImage hasPerceivedTargetCorners) {
 		int toReturn = 0;
-		showImageAndPauseUntilOkayed(hasPerceivedTargetCorners);
+		// showImageAndPauseUntilOkayed(hasPerceivedTargetCorners);
 		ColorSpace diagonalCSpace = new ColorSpace();
 		int targetHue = diagonalCSpace.getTargetingData(perceivedTarget
 				.getTargetColorInt(), 0);
@@ -264,7 +265,7 @@ public class ImageProc {
 			toReturn++;
 		}
 		System.out.println("CheckBothDiagonals says " + toReturn
-				+ " diagonals match colorInt"
+				+ " diagonals match colorInt "
 				+ perceivedTarget.getTargetColorInt());
 		return toReturn;
 	}
@@ -308,7 +309,7 @@ public class ImageProc {
 				+ toReturn + " is dominant");
 		return toReturn;
 	}
-	
+
 	private long euclideanDistance(int i, int j, int x, int y) {
 		return Math.round(Math.sqrt((i - x) * (i - x) + (j - y) * (j - y)));
 	}
@@ -435,63 +436,13 @@ public class ImageProc {
 				// } else {
 				int rgbtot = raster.getSample(subx, suby, 0)
 				+ raster.getSample(subx, suby, 1)
-						+ raster.getSample(subx, suby, 2);
+				+ raster.getSample(subx, suby, 2);
 				if (rgbtot == 0)
 					numBlankNeighbors++;
 				// }
 			}
 		}
 		return numBlankNeighbors;
-	}
-	
-	private void paintCornersWhite(BufferedImage lonePixelsGone,
-			Target allegedTarget) {
-		final int imageWidth = lonePixelsGone.getWidth();
-		final int imageHeight = lonePixelsGone.getHeight();
-		final BufferedImage toReturn = new BufferedImage(imageWidth,
-				imageHeight, BufferedImage.TYPE_INT_RGB);
-
-		final WritableRaster raster = toReturn.getRaster()
-				.createCompatibleWritableRaster();
-
-		int cornerCoords[][] = new int[4][2];
-		cornerCoords[0][0] = (int) allegedTarget.getTopLeft().getX();
-		cornerCoords[0][1] = (int) allegedTarget.getTopLeft().getY();
-		cornerCoords[1][0] = (int) allegedTarget.getTopRight().getX();
-		cornerCoords[1][1] = (int) allegedTarget.getTopRight().getY();
-		cornerCoords[2][0] = (int) allegedTarget.getBottomLeft().getX();
-		cornerCoords[2][1] = (int) allegedTarget.getBottomLeft().getY();
-		cornerCoords[3][0] = (int) allegedTarget.getBottomRight().getX();
-		cornerCoords[3][1] = (int) allegedTarget.getBottomRight().getY();
-
-		
-		int xToPaint;
-		int yToPaint;
-		for (int i = 0; i < 4; i++) {
-			xToPaint = cornerCoords[i][0];
-			yToPaint = cornerCoords[i][1];
-			raster.setSample(xToPaint, yToPaint, 0, 254);
-			raster.setSample(xToPaint, yToPaint, 1, 254);
-			raster.setSample(xToPaint, yToPaint, 2, 254);
-		}
-
-		xToPaint = (int) allegedTarget.getCentroid().getX();
-		yToPaint = (int) allegedTarget.getCentroid().getY();
-		raster.setSample(xToPaint, yToPaint, 0, 254);
-		raster.setSample(xToPaint, yToPaint, 1, 254);
-		raster.setSample(xToPaint, yToPaint, 2, 254);
-
-
-
-		// targetTopEdgeSlope(cornerCoords);
-		// targetBottomEdgeSlope(cornerCoords);
-		// targetHeight(cornerCoords);
-		// targetArea(cornerCoords);
-		// targetCenterXvsPhotoCenter(cornerCoords);
-
-		toReturn.setData(raster);
-		showImageAndPauseUntilOkayed(toReturn);
-		
 	}
 
 	private boolean isBlue(int hue, int sat) {
@@ -687,9 +638,7 @@ public class ImageProc {
 		}
 		toReturn.setData(raster);
 		return toReturn;
-	}  
-
-
+	}
 
 	/**
 	 * taken from http://www.jhlabs.com/ip/filters/MedianFilter.html Takes in an
@@ -716,7 +665,9 @@ public class ImageProc {
 				max = array[i];
 		}
 		return max;
-	}
+	}  
+
+
 
 	private int medianOfSeventeen(int[] array) {
 		int max, maxIndex;
@@ -738,6 +689,54 @@ public class ImageProc {
 				max = array[i];
 		}
 		return max;
+	}
+
+	private void paintCornersWhite(BufferedImage lonePixelsGone,
+			Target allegedTarget) {
+		if (useDiagnosticPainter) {
+			final int imageWidth = lonePixelsGone.getWidth();
+			final int imageHeight = lonePixelsGone.getHeight();
+			final BufferedImage toReturn = new BufferedImage(imageWidth,
+					imageHeight, BufferedImage.TYPE_INT_RGB);
+
+			final WritableRaster raster = toReturn.getRaster()
+					.createCompatibleWritableRaster();
+
+			int cornerCoords[][] = new int[4][2];
+			cornerCoords[0][0] = (int) allegedTarget.getTopLeft().getX();
+			cornerCoords[0][1] = (int) allegedTarget.getTopLeft().getY();
+			cornerCoords[1][0] = (int) allegedTarget.getTopRight().getX();
+			cornerCoords[1][1] = (int) allegedTarget.getTopRight().getY();
+			cornerCoords[2][0] = (int) allegedTarget.getBottomLeft().getX();
+			cornerCoords[2][1] = (int) allegedTarget.getBottomLeft().getY();
+			cornerCoords[3][0] = (int) allegedTarget.getBottomRight().getX();
+			cornerCoords[3][1] = (int) allegedTarget.getBottomRight().getY();
+
+			int xToPaint;
+			int yToPaint;
+			for (int i = 0; i < 4; i++) {
+				xToPaint = cornerCoords[i][0];
+				yToPaint = cornerCoords[i][1];
+				raster.setSample(xToPaint, yToPaint, 0, 254);
+				raster.setSample(xToPaint, yToPaint, 1, 254);
+				raster.setSample(xToPaint, yToPaint, 2, 254);
+			}
+
+			xToPaint = (int) allegedTarget.getCentroid().getX();
+			yToPaint = (int) allegedTarget.getCentroid().getY();
+			raster.setSample(xToPaint, yToPaint, 0, 254);
+			raster.setSample(xToPaint, yToPaint, 1, 254);
+			raster.setSample(xToPaint, yToPaint, 2, 254);
+
+			// targetTopEdgeSlope(cornerCoords);
+			// targetBottomEdgeSlope(cornerCoords);
+			// targetHeight(cornerCoords);
+			// targetArea(cornerCoords);
+			// targetCenterXvsPhotoCenter(cornerCoords);
+
+			toReturn.setData(raster);
+			showImageAndPauseUntilOkayed(toReturn);
+		}
 	}
 
 	public BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
@@ -775,7 +774,7 @@ public class ImageProc {
 		return segmentOutAHue(noiseReduced, segHelpCSpace.getTargetingData(
 				colorOfTargetInFocus, 0), segHelpCSpace.getTargetingData(
 						colorOfTargetInFocus, 1), segHelpCSpace.getTargetingData(
-				colorOfTargetInFocus, 2));
+								colorOfTargetInFocus, 2));
 	}
 
 	public BufferedImage segmentOutAHue(final BufferedImage noiseReduced,
@@ -955,16 +954,16 @@ public class ImageProc {
 		}
 		Target toReturn = new Target(color, topLeft, topRight, bottomLeft,
 				bottomRight);
-		
-		
+
+
 		System.out
-				.println("targetFromSingleHueSegmentedImage will pass image in nextline to checkBothDiagonals");
-		System.out.println("target though to be in here has toString of "
+		.println("targetFromSingleHueSegmentedImage will pass image in nextline to checkBothDiagonals");
+		System.out.println("target thought to be in here has toString of "
 				+ toReturn.toString());
-		showImageAndPauseUntilOkayed(oneTargetInFrame);
-		
-		
-		
+		// showImageAndPauseUntilOkayed(oneTargetInFrame);
+
+
+
 		paintCornersWhite(oneTargetInFrame, toReturn);
 		if (0 < checkBothDiagonals(toReturn, 0.50, oneTargetInFrame)) {
 			return toReturn;
