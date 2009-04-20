@@ -70,6 +70,7 @@ public class Demo3Manual extends Planner {
 		int keyTargetColor = keyTarget.getTargetColorInt();
 		// make the map stop
 		MapStop stop = new MapStop(location, keyTargetColor);
+		this.map.addStop(stop);
 		// spin while making map views
 		double currentAngle = keyAngle + 90 + 45;
 		if (currentAngle >= 360) {

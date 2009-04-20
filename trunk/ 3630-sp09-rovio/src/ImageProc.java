@@ -213,7 +213,7 @@ public class ImageProc {
 		for (int r = 0; r < images.length; r++) {
 			rasters[r] = images[r].getRaster();
 		}
-		
+
 		for (int y = 0; y < h; ++y)
 			for (int x = 0; x < w; ++x) {
 
@@ -248,17 +248,19 @@ public class ImageProc {
 		}
 		return toReturn;
 	}
-	
-	public void histOf(BufferedImage imgToHist, int third, Histogram hist) {
+
+	private void histOf(BufferedImage imgToHist, Corner upperLeft,
+			Corner lowerRight, Histogram hist) {
+		System.out.print("Gathering histogram data...");
 		final int imageWidth = imgToHist.getWidth();
 		ColorSpace ourColorSpace = new ColorSpace();
 		Raster rasterToHist = imgToHist.getRaster();
 		int r, g, b, h, s;
 		int[] hsv;
-		int yLesser = 0;
-		int yGreater = imgToHist.getHeight();
-		int xLesser = third * (int) Math.round(imageWidth / 3.0);
-		int xGreater = (third+1) * (int) Math.round(imageWidth / 3.0);
+		int yLesser = (int) upperLeft.getY();
+		int yGreater = (int) lowerRight.getY();
+		int xLesser = (int) upperLeft.getX();
+		int xGreater = (int) lowerRight.getX();
 
 		for (int y = yLesser; y < yGreater; ++y) {
 
@@ -279,67 +281,58 @@ public class ImageProc {
 				}
 			}
 		}
+		System.out.println("histogram incrementing complete");
 	}
-	
+
+	public void histOf(BufferedImage imgToHist, int third, Histogram hist) {
+		int imageWidth = imgToHist.getWidth();
+		int yLesser = 0;
+		int yGreater = imgToHist.getHeight();
+		int xLesser = third * (int) Math.round(imageWidth / 3.0);
+		int xGreater = (third+1) * (int) Math.round(imageWidth / 3.0);
+		Corner upperLeft = new Corner(xLesser, yLesser);
+		Corner lowerRight = new Corner(xGreater, yGreater);
+		histOf(imgToHist, upperLeft, lowerRight, hist);
+	}
+
 	/**
 	 * takes in ALREADY-HUE-SEGMENTED bufferedImage, looks at middle "tictactoe"
 	 * area, returns int corresponding to highest-scoring hue , 0-4 for rygbv.
-	 * If none of the above hues takes up area in center big enough, returns -1.
-	 * Area expected to be taken up in center is defined by double percentage in
-	 * long-named variable inside "hueMustFillThisPercentOfCenterToBeReturned"
-	 * 
 	 * 
 	 * @param imgWithCenteredTarget
 	 * @return
 	 */
-	public int colorOfTargetInFocus(BufferedImage imgWithCenteredTarget) {
-		final double hueMustFillThisPercentOfCenterToBeReturned = 1.0 / 3.0;
+	public int dominantColorInFocus(BufferedImage imgWithCenteredTarget) {
 		final int imageWidth = imgWithCenteredTarget.getWidth();
 		final int imageHeight = imgWithCenteredTarget.getHeight();
-		final Raster rasterWithCenteredTarget = imgWithCenteredTarget
-				.getRaster();
-		
-		ColorSpace ourColorSpace = new ColorSpace();
-		int r, g, b,h,s;
-		int[] hsv;
-		int[] colorScores = { 0, 0, 0, 0, 0 };
-		int pixelsRecorded = 0;
-		for (int y = (int) Math.round(imageHeight / 3.0); y < imageHeight * 2.0 / 3.0; ++y) {
 
-			for (int x = (int) Math.round(imageWidth / 3.0); x < imageWidth * 2.0 / 3.0; ++x) {
-				r = rasterWithCenteredTarget.getSample(x, y, 0);
-				g = rasterWithCenteredTarget.getSample(x, y, 1);
-				b = rasterWithCenteredTarget.getSample(x, y, 2);
-				hsv = new int[3];
-				rgb2hsv(r, g, b, hsv);
-				h=hsv[0];
-				s = hsv[1];
-				for (int i = 0; i < colorScores.length; i++) {
-					if (Math.abs(ourColorSpace.getTargetingData(i, 0) - h) < ourColorSpace
-							.getTargetingData(i, 1)
-							&& ourColorSpace.getTargetingData(i, 2) < s) {
-						colorScores[i]++;
-					}
-				}
-				pixelsRecorded++;
-			}
-		}
-		
-		int highScoringColor = 1;
-		int highScore = -1;
-		for (int i = 0; i < colorScores.length; i++) {
-			if (colorScores[i] > highScore) {
-				highScoringColor = i;
-				highScore = colorScores[i];
-			}
-		}
+		Histogram focusHist = new Histogram();
+		Corner upperLeft = new Corner((int) Math.round(imageWidth / 3.0), (int)Math.round(imageHeight / 3.0));
+		Corner lowerRight = new Corner((int)Math.round(imageWidth * 2.0 / 3.0), (int)Math.round(imageHeight * 2.0 / 3.0));
 
-		if ((double) colorScores[highScoringColor] / pixelsRecorded < hueMustFillThisPercentOfCenterToBeReturned) {
-			return -1;
-		} else {
-			return highScoringColor;
+		histOf(imgWithCenteredTarget, upperLeft, lowerRight, focusHist);
 
-		}
+		int toReturn = focusHist.mostDominantColor();
+		System.out.println("histOf tells dominantColorInFocus that color "
+				+ toReturn + " is dominant");
+		return toReturn;
+	}
+	
+	public int dominantColorInWidescreen(BufferedImage imgToFindDominator) {
+		final int imageWidth = imgToFindDominator.getWidth();
+		final int imageHeight = imgToFindDominator.getHeight();
+
+		Histogram wideHist = new Histogram();
+		Corner upperLeft = new Corner(0, (int) Math.round(imageHeight / 3.0));
+		Corner lowerRight = new Corner(imageWidth, (int) Math
+				.round(imageHeight * 2.0 / 3.0));
+
+		histOf(imgToFindDominator, upperLeft, lowerRight, wideHist);
+
+		int toReturn = wideHist.mostDominantColor();
+		System.out.println("histOf tells dominantColorInWidescreen that color "
+				+ toReturn + " is dominant");
+		return toReturn;
 	}
 
 	private long euclideanDistance(int i, int j, int x, int y) {
@@ -363,7 +356,7 @@ public class ImageProc {
 		}
 		final int imageWidth = img1.getWidth();
 		final int imageHeight = img1.getHeight();
-		
+
 		final Raster rast1 = img1.getRaster();
 		final Raster rast2 = img2.getRaster();
 
@@ -421,7 +414,7 @@ public class ImageProc {
 				// numBlankNeighbors++;
 				// } else {
 				int rgbtot = raster.getSample(subx, suby, 0)
-						+ raster.getSample(subx, suby, 1)
+				+ raster.getSample(subx, suby, 1)
 						+ raster.getSample(subx, suby, 2);
 				if (rgbtot == 0)
 					numBlankNeighbors++;
@@ -440,7 +433,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-	
+
 	private boolean isColorWorthSegmenting(double hue, double sat) {
 		ColorSpace segmentHelper = new ColorSpace();
 		int targetHueWindow;
@@ -458,7 +451,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * checks if a diagonal line between two opposite corners of a proposed
 	 * quadrilateral mostly contains pixels of approximately the same color,
@@ -513,7 +506,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-	
+
 	private boolean isGreen(int hue, int sat) {
 		ColorSpace ourColorSpace = new ColorSpace();
 		if (Math.abs(ourColorSpace.getTargetingData(2, 0) - hue) < ourColorSpace
@@ -523,7 +516,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-	
+
 	private boolean isPurple(int hue, int sat) {
 		ColorSpace ourColorSpace = new ColorSpace();
 		if (Math.abs(ourColorSpace.getTargetingData(4, 0) - hue) < ourColorSpace
@@ -544,7 +537,7 @@ public class ImageProc {
 		}
 		return false;
 	}
-	
+
 	private boolean isYellow(int hue, int sat) {
 		ColorSpace ourColorSpace = new ColorSpace();
 		if (Math.abs(ourColorSpace.getTargetingData(1, 0) - hue) < ourColorSpace
@@ -652,8 +645,8 @@ public class ImageProc {
 		}
 		return max;
 	}  
-	
-	
+
+
 
 	private int medianOfSeventeen(int[] array) {
 		int max, maxIndex;
@@ -678,7 +671,11 @@ public class ImageProc {
 	}
 
 	public BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
-		return medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
+		System.out.print("Reducing noise...");
+		//BufferedImage toReturn = medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
+		BufferedImage toReturn = medianFilterRadius1(singleNoisyImage);
+		System.out.println("noise reduction complete");
+		return toReturn;
 	}
 
 	/**
@@ -707,7 +704,7 @@ public class ImageProc {
 		ColorSpace segHelpCSpace = new ColorSpace();
 		return segmentOutAHue(noiseReduced, segHelpCSpace.getTargetingData(
 				colorOfTargetInFocus, 0), segHelpCSpace.getTargetingData(
-				colorOfTargetInFocus, 1), segHelpCSpace.getTargetingData(
+						colorOfTargetInFocus, 1), segHelpCSpace.getTargetingData(
 				colorOfTargetInFocus, 2));
 	}
 
@@ -763,6 +760,7 @@ public class ImageProc {
 
 	public BufferedImage segmentOutAllHues(
 			final BufferedImage noiseReduced) {
+		System.out.print("Segmenting all hues...");
 		final int imageWidth = noiseReduced.getWidth();
 		final int imageHeight = noiseReduced.getHeight();
 
@@ -772,13 +770,13 @@ public class ImageProc {
 		final WritableRaster raster = toReturn.getRaster()
 		.createCompatibleWritableRaster();
 		final Raster noiseReducedRaster = noiseReduced.getRaster();
-		
+
 		int r, g, b, h, s;
 		int[] hsv;
 		for (int y = 0; y < imageHeight; ++y) {
 
 			for (int x = 0; x < imageWidth; ++x) {
-				
+
 				r = noiseReducedRaster.getSample(x, y, 0);
 				g = noiseReducedRaster.getSample(x, y, 1);
 				b = noiseReducedRaster.getSample(x, y, 2);
@@ -802,6 +800,7 @@ public class ImageProc {
 			}
 		}
 		toReturn.setData(raster);
+		System.out.println("segmenting of all hues complete");
 		return toReturn;
 	}
 
@@ -813,7 +812,7 @@ public class ImageProc {
 	}
 
 	public Target targetFromAllHueSegmentedImg(BufferedImage allHueSegmented) {
-		int seeminglyDesirableColor = colorOfTargetInFocus(allHueSegmented);
+		int seeminglyDesirableColor = dominantColorInFocus(allHueSegmented);
 		BufferedImage singleHueSegmented = segmentOutAHue(allHueSegmented,
 				seeminglyDesirableColor);
 		singleHueSegmented = reduceNoise(singleHueSegmented);
@@ -829,6 +828,17 @@ public class ImageProc {
 		return targetFromNoiseReducedImage(reduceNoise(rawImg));
 	}
 
+	/**
+	 * method ALREADY EXPECTS bufferedImage passed to it to have been segmented
+	 * for a single hue. Method doesn't care which, but it must have been done
+	 * already. Color int passed to it is ONLY used in helping create the Target
+	 * object returned, it does NOT specify which color the bufferedImage has
+	 * been segmented for or which color target this method will "look" for.
+	 * 
+	 * @param oneTargetInFrame
+	 * @param color
+	 * @return
+	 */
 	public Target targetFromSingleHueSegmentedImg(
 			final BufferedImage oneTargetInFrame,
 			int color) {
@@ -842,7 +852,7 @@ public class ImageProc {
 		Corner topRight = new Corner(0, imageHeight);
 		Corner bottomLeft = new Corner(imageWidth, 0);
 		Corner bottomRight = new Corner(0, 0);
-		
+
 		// initialize "best" scores to worst scores possible for overwriting
 		double topLeftScoreBest = topLeft.distance(bottomRight);
 		double topRightScoreBest = topLeftScoreBest;

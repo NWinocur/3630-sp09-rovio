@@ -1,15 +1,24 @@
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import javax.swing.*;
-
 import java.util.Timer;
 import java.util.TimerTask;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 public class ManualGUI {
 	
 	/** time in miliseconds to ignore keyboard and button events after an event */
-	public static final long INPUT_DELAY = 5000;
+	public static final long INPUT_DELAY = 5;
 	
 	private Demo3Manual planner;
 	private ButtonListener bl;
