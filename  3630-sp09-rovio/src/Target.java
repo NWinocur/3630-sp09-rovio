@@ -157,7 +157,12 @@ public class Target {
 	 */
 	@Override
 	public String toString() {
-		return "TargetColor is color#" + getTargetColorInt();
+		return "TargetColor #==" + getTargetColorInt() + "topLeft=="
+				+ topLeft.getX() + "," + topLeft.getY() + ";" + "topRight=="
+				+ topRight.getX() + "," + topRight.getY() + ";"
+				+ "bottomLeft==" + bottomLeft.getX() + "," + bottomLeft.getY()
+				+ ";" + "bottomRight==" + bottomRight.getX() + ","
+				+ bottomRight.getY() + ";";
 	}
 
 	public boolean cornersSeemValid() {

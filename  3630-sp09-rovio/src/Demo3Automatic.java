@@ -13,6 +13,7 @@ public class Demo3Automatic extends Planner {
 
 	public Demo3Automatic(Robot robot, ColorSpace cspace, Map map) {
 		super(robot);
+		super.currentPosition = new Waypoint(-1337, -1337, 42);
 		this.cspace = cspace;
 		this.map = map;
 		this.d3aIP = new ImageProc();
@@ -25,6 +26,9 @@ public class Demo3Automatic extends Planner {
 	}
 
 	public void makeMove() {
+		System.out
+				.println("D3Auto's makeMove just started, currentPos posited at "
+						+ super.currentPosition.toString());
 		Waypoint goal = new Waypoint(0, 0, 0);
 		// localize
 		Waypoint localizedLocation = null;
@@ -45,6 +49,7 @@ public class Demo3Automatic extends Planner {
 	}
 
 	private void lookConfused() {
+		System.out.println("lookConfused(" + confusedTurns + ") called");
 		if (0 == confusedTurns) {
 			double d = -1;
 			double angle = super.currentPosition.getTheta()
@@ -54,7 +59,6 @@ public class Demo3Automatic extends Planner {
 			Waypoint tempGoal = new Waypoint(super.currentPosition.getX() + dx,
 					super.currentPosition.getY() + dy, super.currentPosition
 					.getTheta());
-			currentPosition = new Waypoint(0, 0, 90);
 			super.driveTo(tempGoal);
 		} else {
 			Waypoint tempGoal = new Waypoint(super.currentPosition.getX(),
@@ -74,8 +78,12 @@ public class Demo3Automatic extends Planner {
 		// do: optics
 		// do: noisereduction
 		// do: segmentation of all hues
+		System.out.println("Starting localize()");
 		BufferedImage justKidnappedBI = actAsIfJustKidnapped();
+		
 		Target bestTargetInView = pickBestTargetInView(justKidnappedBI);
+		// ImageProc.showImageAndPauseUntilOkayed(justKidnappedBI);
+		
 		if (null == bestTargetInView) {
 			// if no targets in view, look confused to find any target.
 			lookConfused();
@@ -187,9 +195,11 @@ public class Demo3Automatic extends Planner {
 			int targetHue = cspace.getTargetingData(t, 0);
 			int targetHueWindow = cspace.getTargetingData(t, 1);
 			int sat = cspace.getTargetingData(t, 2);
-			potentialTarget[t] = d3aIP.targetFromSingleHueSegmentedImg(d3aIP
-					.segmentOutAHue(allHueSegmentedImg, targetHue,
-							targetHueWindow, sat), t);
+			BufferedImage singleHueSegmentedImg = d3aIP.segmentOutAHue(
+					allHueSegmentedImg, targetHue, targetHueWindow, sat);
+			// ImageProc.showImage(singleHueSegmentedImg);
+			potentialTarget[t] = d3aIP.targetFromSingleHueSegmentedImg(
+					singleHueSegmentedImg, t);
 		}
 
 		double biggestTargetArea = -1;
