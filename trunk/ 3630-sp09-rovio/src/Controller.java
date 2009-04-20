@@ -42,8 +42,10 @@ public abstract class Controller {
 		System.out.println("connection established and authenticated");
 		Robot r = new Robot(rc);
 		// Planner planDemonstration = connectTheDots(r);
-		Planner planDemonstration = ooPurtyColors(r);
+		// Planner planDemonstration = ooPurtyColors(r);
 		// Planner planDemonstration = new Demo3Manual(r);
+		Planner planDemonstration = new Demo3Automatic(r, new ColorSpace(),
+				null);
 		while (true) {
 			planDemonstration.makeMove();
 		}
