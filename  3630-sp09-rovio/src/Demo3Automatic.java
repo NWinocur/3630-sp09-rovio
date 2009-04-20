@@ -187,7 +187,6 @@ public class Demo3Automatic extends Planner {
 
 
 	private Target pickBestTargetInView(BufferedImage allHueSegmentedImg) {
-		Target toReturn;
 		Target[] potentialTarget = new Target[5];
 
 		for (int t = 0; t < potentialTarget.length; t++)
@@ -198,6 +197,9 @@ public class Demo3Automatic extends Planner {
 			BufferedImage singleHueSegmentedImg = d3aIP.segmentOutAHue(
 					allHueSegmentedImg, targetHue, targetHueWindow, sat);
 			// ImageProc.showImage(singleHueSegmentedImg);
+			System.out
+					.println("PickBestTargetInView about to call for colorInt"
+							+ t);
 			potentialTarget[t] = d3aIP.targetFromSingleHueSegmentedImg(
 					singleHueSegmentedImg, t);
 		}
@@ -215,9 +217,18 @@ public class Demo3Automatic extends Planner {
 			}
 		}
 		if (-1 == biggestTarget)
+		{
 			return null;
+		}
 		else
+		{
+			System.out
+					.println("pickBestTargetInView chose the target with color int "
+							+ biggestTarget);
+			ImageProc.showImage(allHueSegmentedImg);
 			return potentialTarget[biggestTarget];
+		}
+			
 	}
 
 	public void driveToGoal(Waypoint goal) {
