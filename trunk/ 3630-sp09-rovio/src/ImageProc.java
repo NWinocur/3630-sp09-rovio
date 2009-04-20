@@ -234,9 +234,9 @@ public class ImageProc {
 		return average;
 	}
 
-	public double CheckBothDiagonals(Corner topL, Corner topR, Corner botL,
+	private double checkBothDiagonals(Corner topL, Corner topR, Corner botL,
 			Corner botR, double desiredCertainty,
-			BufferedImage hasAnAllegedTarget, int targetHueWindow, int targetHue) {
+			BufferedImage hasAnAllegedTarget, int targetHue, int targetHueWindow) {
 		int toReturn = 0;
 		if (isDiagonalOfTargetColor(topL, botR, desiredCertainty,
 				hasAnAllegedTarget, targetHueWindow, targetHue)) {
@@ -249,50 +249,26 @@ public class ImageProc {
 		return toReturn;
 	}
 
-	private void histOf(BufferedImage imgToHist, Corner upperLeft,
-			Corner lowerRight, Histogram hist) {
-		System.out.print("Gathering histogram data...");
-		final int imageWidth = imgToHist.getWidth();
-		ColorSpace ourColorSpace = new ColorSpace();
-		Raster rasterToHist = imgToHist.getRaster();
-		int r, g, b, h, s;
-		int[] hsv;
-		int yLesser = (int) upperLeft.getY();
-		int yGreater = (int) lowerRight.getY();
-		int xLesser = (int) upperLeft.getX();
-		int xGreater = (int) lowerRight.getX();
+	private int checkBothDiagonals(Target perceivedTarget,
+			double desiredCertainty, BufferedImage hasPercievedTargetCorners) {
+		int toReturn = 0;
+		ColorSpace diagonalCSpace = new ColorSpace();
+		int targetHue = diagonalCSpace.getTargetingData(perceivedTarget
+				.getTargetColorInt(), 0);
+		int targetHueWindow = diagonalCSpace.getTargetingData(perceivedTarget
+				.getTargetColorInt(), 1);
 
-		for (int y = yLesser; y < yGreater; ++y) {
-
-			for (int x = xLesser; x < xGreater; ++x) {
-				r = rasterToHist.getSample(x, y, 0);
-				g = rasterToHist.getSample(x, y, 1);
-				b = rasterToHist.getSample(x, y, 2);
-				hsv = new int[3];
-				rgb2hsv(r, g, b, hsv);
-				h = hsv[0];
-				s = hsv[1];
-				for (int i = 0; i < 5; i++) {
-					if (Math.abs(ourColorSpace.getTargetingData(i, 0) - h) < ourColorSpace
-							.getTargetingData(i, 1)
-							&& ourColorSpace.getTargetingData(i, 2) < s) {
-						hist.incrementFreq(i);
-					}
-				}
-			}
+		if (isDiagonalOfTargetColor(perceivedTarget.getTopLeft(),
+				perceivedTarget.getBottomRight(), desiredCertainty,
+				hasPercievedTargetCorners, targetHue, targetHueWindow)) {
+			toReturn++;
 		}
-		System.out.println("histogram incrementing complete");
-	}
-
-	public void histOf(BufferedImage imgToHist, int third, Histogram hist) {
-		int imageWidth = imgToHist.getWidth();
-		int yLesser = 0;
-		int yGreater = imgToHist.getHeight();
-		int xLesser = third * (int) Math.round(imageWidth / 3.0);
-		int xGreater = (third+1) * (int) Math.round(imageWidth / 3.0);
-		Corner upperLeft = new Corner(xLesser, yLesser);
-		Corner lowerRight = new Corner(xGreater, yGreater);
-		histOf(imgToHist, upperLeft, lowerRight, hist);
+		if (isDiagonalOfTargetColor(perceivedTarget.getBottomLeft(),
+				perceivedTarget.getTopRight(), desiredCertainty,
+				hasPercievedTargetCorners, targetHue, targetHueWindow)) {
+			toReturn++;
+		}
+		return toReturn;
 	}
 
 	/**
@@ -317,7 +293,7 @@ public class ImageProc {
 				+ toReturn + " is dominant");
 		return toReturn;
 	}
-	
+
 	public int dominantColorInWidescreen(BufferedImage imgToFindDominator) {
 		final int imageWidth = imgToFindDominator.getWidth();
 		final int imageHeight = imgToFindDominator.getHeight();
@@ -334,10 +310,11 @@ public class ImageProc {
 				+ toReturn + " is dominant");
 		return toReturn;
 	}
-
+	
 	private long euclideanDistance(int i, int j, int x, int y) {
 		return Math.round(Math.sqrt((i - x) * (i - x) + (j - y) * (j - y)));
 	}
+
 	/**
 	 * compares middle "tic-tac-toe box" of two equally-sized bufferedImages; in
 	 * practice, takes absolute value of their differences and looks at that
@@ -397,6 +374,51 @@ public class ImageProc {
 				+ (1.0 - (double) satSumSoFar / (double) pixelsRecorded));
 		comparison.setData(raster);
 		return comparison;
+	}
+	private void histOf(BufferedImage imgToHist, Corner upperLeft,
+			Corner lowerRight, Histogram hist) {
+		System.out.print("Gathering histogram data...");
+		final int imageWidth = imgToHist.getWidth();
+		ColorSpace ourColorSpace = new ColorSpace();
+		Raster rasterToHist = imgToHist.getRaster();
+		int r, g, b, h, s;
+		int[] hsv;
+		int yLesser = (int) upperLeft.getY();
+		int yGreater = (int) lowerRight.getY();
+		int xLesser = (int) upperLeft.getX();
+		int xGreater = (int) lowerRight.getX();
+
+		for (int y = yLesser; y < yGreater; ++y) {
+
+			for (int x = xLesser; x < xGreater; ++x) {
+				r = rasterToHist.getSample(x, y, 0);
+				g = rasterToHist.getSample(x, y, 1);
+				b = rasterToHist.getSample(x, y, 2);
+				hsv = new int[3];
+				rgb2hsv(r, g, b, hsv);
+				h = hsv[0];
+				s = hsv[1];
+				for (int i = 0; i < 5; i++) {
+					if (Math.abs(ourColorSpace.getTargetingData(i, 0) - h) < ourColorSpace
+							.getTargetingData(i, 1)
+							&& ourColorSpace.getTargetingData(i, 2) < s) {
+						hist.incrementFreq(i);
+					}
+				}
+			}
+		}
+		System.out.println("histogram incrementing complete");
+	}
+
+	public void histOf(BufferedImage imgToHist, int third, Histogram hist) {
+		int imageWidth = imgToHist.getWidth();
+		int yLesser = 0;
+		int yGreater = imgToHist.getHeight();
+		int xLesser = third * (int) Math.round(imageWidth / 3.0);
+		int xGreater = (third + 1) * (int) Math.round(imageWidth / 3.0);
+		Corner upperLeft = new Corner(xLesser, yLesser);
+		Corner lowerRight = new Corner(xGreater, yGreater);
+		histOf(imgToHist, upperLeft, lowerRight, hist);
 	}
 
 	private int howLonelyAmI(final BufferedImage imageToCheck, final int x,
@@ -617,7 +639,9 @@ public class ImageProc {
 		}
 		toReturn.setData(raster);
 		return toReturn;
-	}
+	}  
+
+
 
 	/**
 	 * taken from http://www.jhlabs.com/ip/filters/MedianFilter.html Takes in an
@@ -644,9 +668,7 @@ public class ImageProc {
 				max = array[i];
 		}
 		return max;
-	}  
-
-
+	}
 
 	private int medianOfSeventeen(int[] array) {
 		int max, maxIndex;
@@ -810,7 +832,6 @@ public class ImageProc {
 				+ " target is " + (targetMidX - 320) + " pixels from center");
 		return targetMidX - 320;
 	}
-
 	public Target targetFromAllHueSegmentedImg(BufferedImage allHueSegmented) {
 		int seeminglyDesirableColor = dominantColorInFocus(allHueSegmented);
 		BufferedImage singleHueSegmented = segmentOutAHue(allHueSegmented,
@@ -819,6 +840,7 @@ public class ImageProc {
 		return targetFromSingleHueSegmentedImg(singleHueSegmented,
 				seeminglyDesirableColor);
 	}
+
 	public Target targetFromNoiseReducedImage(BufferedImage noiseReduced)
 	{
 		return targetFromAllHueSegmentedImg(segmentOutAllHues(noiseReduced));
@@ -884,14 +906,15 @@ public class ImageProc {
 			}
 		}
 		
-		// code to check whether these corners correspond to a single target
-		// or whether there's empty black noise/open space between corners
-		// can go here
-		
 		Target toReturn = new Target(color, bottomRight, bottomRight,
-				bottomRight,
-				bottomRight);
-		return toReturn;
+				bottomRight, bottomRight);
+		if (0 < checkBothDiagonals(toReturn, 0.50, oneTargetInFrame)) {
+			return toReturn;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 	private int[] whatDoNineNeighborsLookLike(BufferedImage imageToCheck,
