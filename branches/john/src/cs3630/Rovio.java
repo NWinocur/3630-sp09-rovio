@@ -47,10 +47,10 @@ public class Rovio extends Authenticator {
 	public void doTurnTest() throws Exception {
 		this.turnByNumber(RotateDirection.LEFT, Utils.angle180);
 		this.pause(sleepAmountInMillis);
-		this.pause(10000);
+		this.pause(1000);
 		this.turnByNumber(RotateDirection.RIGHT, Utils.angle180);
 		this.pause(sleepAmountInMillis);
-		this.pause(10000);
+		this.pause(1000);
 		
 		System.out.println("Turning with angle of 1\n");
 		
@@ -58,8 +58,14 @@ public class Rovio extends Authenticator {
 		this.pause(sleepAmountInMillis);
 		this.turnByNumber(RotateDirection.LEFT, 1);
 		this.pause(sleepAmountInMillis);
+		this.turnByNumber(RotateDirection.LEFT, 1);
 	}
 
+	public void doImageTest() throws Exception {
+		
+		BufferedImage image = ImageLab.medianFilter(this.getImage());
+	}
+	
 	public Rovio(String ipAddress, String username, String password) throws MalformedURLException {
 		
 		this.ipAddress = ipAddress;
