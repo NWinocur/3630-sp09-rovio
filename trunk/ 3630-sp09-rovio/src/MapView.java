@@ -39,7 +39,7 @@ public class MapView {
 	}
 	
 	public String rawString() {
-		String s = String.format("%d,", this.angle);
+		String s = String.format("%d ", this.angle);
 		s = s + this.zones[0].rawString() + " ";
 		s = s + this.zones[1].rawString() + " ";
 		s = s + this.zones[2].rawString() + "";

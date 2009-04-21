@@ -181,7 +181,7 @@ public class ManualGUI {
 					setStatus("automatic mode");
 					planner.autoMode();
 					// sleep forever (ignore GUI inputs)
-					isAsleep = true;
+					// isAsleep = true;
 				}
 			}
 		}
