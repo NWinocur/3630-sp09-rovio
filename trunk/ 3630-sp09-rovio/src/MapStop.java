@@ -1,7 +1,7 @@
 public class MapStop {
 	
 	/* constant stating number of views at each MapStop */
-	public static final int NUM_VIEWS = 8;
+	public static final int NUM_VIEWS = 3;
 	
 	private Waypoint location;
 	private int keyTargetColor;
