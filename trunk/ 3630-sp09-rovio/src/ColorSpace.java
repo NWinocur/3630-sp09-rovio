@@ -33,8 +33,7 @@ public class ColorSpace {
 		return targetingData;
 	}
 	
-	/** useful for manually settings values */
-	public void setAllDefaults() {
+	private void threeInTheAfternoon() {
 		targetingData[0][0] = 18;
 		targetingData[0][1] = 29;
 		targetingData[0][2] = 18;
@@ -51,6 +50,30 @@ public class ColorSpace {
 		targetingData[4][1] = 25;
 		targetingData[4][2] = 12;
 	}
+	
+	/** useful for manually settings values */
+	public void setAllDefaults() {
+		nineInTheAfternoon();
+	}
+
+	private void nineInTheAfternoon() {
+		targetingData[0][0] = 18;
+		targetingData[0][1] = 30;
+		targetingData[0][2] = 18;
+		targetingData[1][0] = 60;
+		targetingData[1][1] = 20;
+		targetingData[1][2] = 28;
+		targetingData[2][0] = 125;
+		targetingData[2][1] = 26;
+		targetingData[2][2] = 10;
+		targetingData[3][0] = 200;
+		targetingData[3][1] = 26;
+		targetingData[3][2] = 24;
+		targetingData[4][0] = 270;
+		targetingData[4][1] = 28;
+		targetingData[4][2] = 12;
+	}
+	
 	
 	private void samplePixel(int color, int measuredHue, int sat) {
 		if (color == 0 && measuredHue > 180) {

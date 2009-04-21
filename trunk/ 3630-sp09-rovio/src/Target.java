@@ -111,12 +111,6 @@ public class Target {
 		return avgYofBottom2Corners - avgYofTop2Corners;
 	}
 	
-	/**
-	 * @return the targetColor
-	 */
-	public Color getTargetColor() {
-		return this.targetColor;
-	}
 
 	public int getTargetColorInt() {
 		if (this.targetColor.equals(Color.red))

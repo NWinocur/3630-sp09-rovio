@@ -19,7 +19,7 @@ public class ImageProc {
 
 	public static final float[] blur2kernel = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 
-	private static final boolean showImages = false;
+	private static final boolean showImages = true;
 	private static final boolean useDiagnosticPainter = false;
 	/**
 	 * Change an HSV color to RGB color. We don't bother converting the alpha as
@@ -741,8 +741,8 @@ public class ImageProc {
 
 	public BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
 		System.out.print("Reducing noise...");
-		//BufferedImage toReturn = medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
-		BufferedImage toReturn = medianFilterRadius1(singleNoisyImage);
+		BufferedImage toReturn = medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
+		toReturn = medianFilterRadius1(singleNoisyImage);
 		System.out.println("noise reduction complete");
 		return toReturn;
 	}
@@ -960,7 +960,7 @@ public class ImageProc {
 		.println("targetFromSingleHueSegmentedImage will pass image in nextline to checkBothDiagonals");
 		System.out.println("target thought to be in here has toString of "
 				+ toReturn.toString());
-		// showImageAndPauseUntilOkayed(oneTargetInFrame);
+		showImageAndPauseUntilOkayed(oneTargetInFrame);
 
 
 
