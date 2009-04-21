@@ -52,6 +52,7 @@ public class Demo3Manual extends Planner {
 	
 	public void autoMode() {
 		System.out.println(this.map.toString());
+		this.map.writeMapToFile();
 		// initialize automatic mode
 		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
 		//d.makeMove();
