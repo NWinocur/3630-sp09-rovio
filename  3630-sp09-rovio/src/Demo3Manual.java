@@ -25,7 +25,7 @@ public class Demo3Manual extends Planner {
 	}
 	
 	public void driveForward() {
-		driveForward(0.7);
+		driveForward(1);
 	}
 
 	public void driveForward(double metersToDriveForward) {

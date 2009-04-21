@@ -51,7 +51,7 @@ public class Histogram {
 	public String rawString() {
 		String s = "";
 		for (int i = 0; i < 4; i++) {
-			s = String.format(s + "%d" + "\\", this.freqs[i]);
+			s = String.format(s + "%d" + "^", this.freqs[i]);
 		}
 		s = String.format(s + "%d", this.freqs[4]);
 		return s;

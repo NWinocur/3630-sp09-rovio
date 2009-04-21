@@ -53,10 +53,10 @@ public class MapStop {
 	
 	public String rawString() {
 		String s = String.format("%f,%f,%f,%d,", location.getX(), location.getY(), location.getTheta(), keyTargetColor);
-		for (int i = 0; i < viewCount; i++) {
+		for (int i = 0; i < viewCount - 1; i++) {
 			s = s + this.views[i].rawString() + ",";
 		}
-		s = s + " \n";
+		s = s + this.views[viewCount - 1].rawString() + "\n";
 		return s;
 	}
 	

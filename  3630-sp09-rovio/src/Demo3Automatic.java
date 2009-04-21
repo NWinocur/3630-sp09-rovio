@@ -69,28 +69,28 @@ public class Demo3Automatic extends Planner {
 	 * 
 	 * @param s
 	 */
-	static private MapView readInMapView(Scanner s) {
-	
+	static private MapView readInMapView(Scanner sa) {
+		Scanner s = new Scanner(sa.next());
 		s.useDelimiter(" ");
 		int viewAngle = s.nextInt();
 		
 		s.useDelimiter(" ");
 		Scanner s2 = new Scanner(s.next());
 		Histogram left = new Histogram();
-		s2.useDelimiter("\\");
+		s2.useDelimiter("^");
 		for (int col = 0; col < 5; col++) {
 			left.setFreq(col, s.nextInt());
 		}
 
 		s2 = new Scanner(s.next());
-		s2.useDelimiter("\\");
+		s2.useDelimiter("^");
 		Histogram mid = new Histogram();
 		for (int col = 0; col < 5; col++) {
 			mid.setFreq(col, s.nextInt());
 		}
 
 		s2 = new Scanner(s.next());
-		s2.useDelimiter("\\");
+		s2.useDelimiter("^");
 		Histogram right = new Histogram();
 		for (int col = 0; col < 5; col++) {
 			right.setFreq(col, s.nextInt());
@@ -121,7 +121,7 @@ public class Demo3Automatic extends Planner {
 		super.currentPosition = loc.getLocation();
 		super.driveTo(new Waypoint(0, 0, 0));
 		// halt
-		while (true) {}
+		// while (true) {}
 	}
 	
 	
