@@ -25,7 +25,7 @@ public class Demo3Manual extends Planner {
 	}
 	
 	public void driveForward() {
-		driveForward(0.125);
+		driveForward(0.7);
 	}
 
 	public void driveForward(double metersToDriveForward) {
@@ -55,7 +55,7 @@ public class Demo3Manual extends Planner {
 		this.map.writeMapToFile();
 		// initialize automatic mode
 		Demo3Automatic d = new Demo3Automatic(super.robot, this.cspace, this.map);
-		//d.makeMove();
+		d.makeMove();
 		System.out.println("automatic mode finished");
 	}
 	
@@ -68,36 +68,38 @@ public class Demo3Manual extends Planner {
 		// get the key target color
 		BufferedImage rawImageArray[] = burstFire();
 		Target keyTarget = iproc.targetFromRawImg(iproc.average(rawImageArray));
-		if (null == keyTarget)
+		if (null == keyTarget) {
 			System.out.println("MapStop thinks keyTarget is null");
-		int keyTargetColor = keyTarget.getTargetColorInt();
-		// make the map stop
-		MapStop stop = new MapStop(location, keyTargetColor);
-		this.map.addStop(stop);
-		// spin while making map views
-		double currentAngle = keyAngle + 90 + 45;
-		if (currentAngle >= 360) {
-			currentAngle -= 360;
+		} else {
+			int keyTargetColor = keyTarget.getTargetColorInt();
+			// make the map stop
+			MapStop stop = new MapStop(location, keyTargetColor);
+			this.map.addStop(stop);
+			// spin while making map views
+			double currentAngle = keyAngle + 90 + 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			this.learnView(stop, currentAngle);
+			currentAngle += 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			this.learnView(stop, currentAngle);
+			currentAngle += 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			this.learnView(stop, currentAngle);
+			currentAngle += 90 + 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
 		}
-		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
-		this.learnView(stop, currentAngle);
-		currentAngle += 45;
-		if (currentAngle >= 360) {
-			currentAngle -= 360;
-		}
-		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
-		this.learnView(stop, currentAngle);
-		currentAngle += 45;
-		if (currentAngle >= 360) {
-			currentAngle -= 360;
-		}
-		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
-		this.learnView(stop, currentAngle);
-		currentAngle += 90 + 45;
-		if (currentAngle >= 360) {
-			currentAngle -= 360;
-		}
-		super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
 	}
 	
 	public void learnView(MapStop stop, double angle) {

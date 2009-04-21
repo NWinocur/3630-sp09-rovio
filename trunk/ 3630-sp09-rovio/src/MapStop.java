@@ -20,11 +20,12 @@ public class MapStop {
 	}
 	
 	public MapView[] getViews() {
-		MapView[] a = new MapView[3];
+		/*MapView[] a = new MapView[3];
 		a[0] = this.getViewAt(90+45);
 		a[1] = this.getViewAt(180);
 		a[2] = this.getViewAt(180+45);
-		return a;
+		return a;*/
+		return this.views;
 	}
 	
 	public Waypoint getLocation() {
@@ -55,7 +56,7 @@ public class MapStop {
 		s = s
 				+ String.format("( %f, %f, %f )", location.getX(), location
 						.getY(), location.getTheta());
-		s = s + String.format(" with color %d and views: { ", this.keyTargetColor);
+		s = s + String.format(" with color %d and views: {\n", this.keyTargetColor);
 		for (int i = 0; i < viewCount; i++) {
 			s = s + this.views[i].toString() + " ";
 		}
