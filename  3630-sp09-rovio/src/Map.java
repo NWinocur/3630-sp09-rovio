@@ -1,3 +1,7 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 public class Map {
 	
 	private MapStop[] stops;
@@ -122,6 +126,19 @@ public class Map {
 		}
 		s = s + " >";
 		return s;
+	}
+	
+	public void writeMapToFile() {
+		File toOutputMapTo = new File("mostRecentMapOutput.txt");
+		try {
+			ReadWriteTextFile.setContents(toOutputMapTo, this.toString());
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 }
