@@ -51,9 +51,27 @@ public class ColorSpace {
 		targetingData[4][2] = 12;
 	}
 	
+	private void elevenInTheMorning() {
+		targetingData[0][0] = 18;
+		targetingData[0][1] = 29;
+		targetingData[0][2] = 18;
+		targetingData[1][0] = 60;
+		targetingData[1][1] = 20;
+		targetingData[1][2] = 256;
+		targetingData[2][0] = 125;
+		targetingData[2][1] = 26;
+		targetingData[2][2] = 7;
+		targetingData[3][0] = 200;
+		targetingData[3][1] = 26;
+		targetingData[3][2] = 26;
+		targetingData[4][0] = 245;
+		targetingData[4][1] = 15;
+		targetingData[4][2] = 13;
+	}
+	
 	/** useful for manually settings values */
 	public void setAllDefaults() {
-		nineInTheAfternoon();
+		elevenInTheMorning();
 	}
 
 	private void nineInTheAfternoon() {
