@@ -27,9 +27,9 @@ public class Demo3Automatic extends Planner {
 	}
 
 	public void makeMove() {
-		System.out
+		/*System.out
 				.println("D3Auto's makeMove just started, currentPos posited at "
-						+ super.currentPosition.toString());
+						+ super.currentPosition.toString());*/
 		/*Waypoint goal = new Waypoint(0, 0, 0);
 		// localize
 		Waypoint localizedLocation = null;
@@ -38,7 +38,10 @@ public class Demo3Automatic extends Planner {
 		} while (null == localizedLocation);
 		super.currentPosition = localizedLocation;
 		driveToGoal(goal);*/
-		System.out.println(mapStop().toString());
+		MapStop loc = mapStop();
+		System.out.println(loc.toString());
+		super.currentPosition = loc.getLocation();
+		super.driveTo(new Waypoint(0, 0, 0));
 		// halt
 		while (true) {}
 	}
