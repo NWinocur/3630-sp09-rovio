@@ -8,7 +8,7 @@ public class Demo3Manual extends Planner {
 	
 	public Demo3Manual(Robot robot) {
 		super(robot);
-		super.currentPosition = new Waypoint(0, 0, 0);
+		super.currentPosition = new Waypoint(0, 0, 90);
 		cspace = new ColorSpace();
 		// hard code numbers in ColorSpace class, instead of auto-calibration
 		cspace.setAllDefaults();
