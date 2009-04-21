@@ -53,6 +53,7 @@ public class Demo3Automatic extends Planner {
 			cspace = new ColorSpace();
 			cspace.setAllDefaults();
 			readFromRawFile();
+			System.out.println(map.rawString());
 		}
 		this.d3aIP = new ImageProc();
 		this.confusedTurns = 1;
