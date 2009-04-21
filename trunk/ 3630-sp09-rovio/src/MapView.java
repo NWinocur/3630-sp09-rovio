@@ -22,6 +22,10 @@ public class MapView {
 		}
 	}
 	
+	public void setZone(int zone, Histogram h) {
+		this.zones[zone] = h;
+	}
+	
 	/** gets the angle that this view is facing, read constructor comments
 	* for details */
 	public int getAngle() {
@@ -32,6 +36,14 @@ public class MapView {
 	* use static constants in this class to identify zones */
 	public Histogram getHistogram(int zone) {
 		return this.zones[zone];
+	}
+	
+	public String rawString() {
+		String s = String.format("%d,", this.angle);
+		s = s + this.zones[0].rawString() + " ";
+		s = s + this.zones[1].rawString() + " ";
+		s = s + this.zones[2].rawString() + "";
+		return s;
 	}
 	
 	public String toString() {

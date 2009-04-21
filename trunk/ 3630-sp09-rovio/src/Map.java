@@ -120,6 +120,15 @@ public class Map {
 		System.out.println(this.toString());
 	}
 	
+	public String rawString() {
+		String s = "";
+		for (int i = 0; i < numStops; i++) {
+			s = s + this.stops[i].rawString();
+		}
+		//s = s + " >";
+		return s;
+	}
+	
 	public String toString() {
 		String s = "map: < ";
 		for (int i = 0; i < numStops; i++) {
@@ -130,6 +139,16 @@ public class Map {
 	}
 	
 	public void writeMapToFile() {
+		 try {
+		    BufferedWriter out = new BufferedWriter(new FileWriter("mostRecentMapOutput.txt"));
+		    out.write(this.rawString());
+		    out.close();
+		} catch (IOException e) {
+			System.out.println("failed to write file\n");
+		}
+	}
+	
+	/*public void writeMapToFile() {
 		File toOutputMapTo = new File("mostRecentMapOutput.txt");
 		try {
 			ReadWriteTextFile.setContents(toOutputMapTo, this.toString());
@@ -140,6 +159,6 @@ public class Map {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+	}*/
 	
 }
