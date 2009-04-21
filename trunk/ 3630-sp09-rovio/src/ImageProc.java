@@ -205,6 +205,8 @@ public class ImageProc {
 	public final float[] interestPointKernel = { -1, -1, -1, -1, 8, -1, -1, -1,
 			-1 };
 
+	public final boolean ignoreDiagonals = true;
+
 	public BufferedImage average(BufferedImage[] images) {
 
 		int n = images.length;
@@ -246,6 +248,8 @@ public class ImageProc {
 
 	private int checkBothDiagonals(Target perceivedTarget,
 			double desiredCertainty, BufferedImage hasPerceivedTargetCorners) {
+		if (ignoreDiagonals)
+			return 1;
 		int toReturn = 0;
 		// showImageAndPauseUntilOkayed(hasPerceivedTargetCorners);
 		paintCornersWhite(hasPerceivedTargetCorners, perceivedTarget);
@@ -966,7 +970,7 @@ public class ImageProc {
 
 
 		paintCornersWhite(oneTargetInFrame, toReturn);
-		if (0 < checkBothDiagonals(toReturn, 0.5, oneTargetInFrame)) {
+		if (0 < checkBothDiagonals(toReturn, 0.3, oneTargetInFrame)) {
 			return toReturn;
 		}
 		else
