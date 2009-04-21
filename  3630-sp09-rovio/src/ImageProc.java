@@ -19,8 +19,8 @@ public class ImageProc {
 
 	public static final float[] blur2kernel = { 1, 2, 1, 2, 4, 2, 1, 2, 1 };
 
-	private static final boolean showImages = true;
-	private static final boolean useDiagnosticPainter = false;
+	private static final boolean showImages = false;
+	private static final boolean useDiagnosticPainter = true;
 	/**
 	 * Change an HSV color to RGB color. We don't bother converting the alpha as
 	 * that stays the same regardless of color space.
@@ -248,6 +248,7 @@ public class ImageProc {
 			double desiredCertainty, BufferedImage hasPerceivedTargetCorners) {
 		int toReturn = 0;
 		// showImageAndPauseUntilOkayed(hasPerceivedTargetCorners);
+		paintCornersWhite(hasPerceivedTargetCorners, perceivedTarget);
 		ColorSpace diagonalCSpace = new ColorSpace();
 		int targetHue = diagonalCSpace.getTargetingData(perceivedTarget
 				.getTargetColorInt(), 0);
@@ -487,7 +488,7 @@ public class ImageProc {
 	 * @return true if diagonal is mostly the same color as corners, false if
 	 *         c2x==c1x, false otherwise
 	 */
-	public boolean isDiagonalOfTargetColor(Corner leftCorner,
+	private boolean isDiagonalOfTargetColor(Corner leftCorner,
 			Corner rightCorner, double maxPercentBad, BufferedImage i,
 			int threshhold, int targetHue) {
 		int dx = (int) (rightCorner.getX() - leftCorner.getX());
@@ -742,7 +743,7 @@ public class ImageProc {
 	public BufferedImage reduceNoise(BufferedImage singleNoisyImage) {
 		System.out.print("Reducing noise...");
 		BufferedImage toReturn = medianFilterRadius2(medianFilterRadius1(singleNoisyImage));
-		toReturn = medianFilterRadius1(singleNoisyImage);
+		// toReturn = medianFilterRadius1(singleNoisyImage);
 		System.out.println("noise reduction complete");
 		return toReturn;
 	}
@@ -965,7 +966,7 @@ public class ImageProc {
 
 
 		paintCornersWhite(oneTargetInFrame, toReturn);
-		if (0 < checkBothDiagonals(toReturn, 0.50, oneTargetInFrame)) {
+		if (0 < checkBothDiagonals(toReturn, 0.5, oneTargetInFrame)) {
 			return toReturn;
 		}
 		else
