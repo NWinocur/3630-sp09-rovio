@@ -10,6 +10,7 @@ public class Demo3Automatic extends Planner {
 	private ImageProc d3aIP;
 	private int confusedTurns;
 	private DistanceTable distanceTable;
+	
 
 	public Demo3Automatic(Robot robot, ColorSpace cspace, Map map) {
 		super(robot);
@@ -29,17 +30,87 @@ public class Demo3Automatic extends Planner {
 		System.out
 				.println("D3Auto's makeMove just started, currentPos posited at "
 						+ super.currentPosition.toString());
-		Waypoint goal = new Waypoint(0, 0, 0);
+		/*Waypoint goal = new Waypoint(0, 0, 0);
 		// localize
 		Waypoint localizedLocation = null;
 		do {
 			localizedLocation = localize();
 		} while (null == localizedLocation);
 		super.currentPosition = localizedLocation;
-		driveToGoal(goal);
+		driveToGoal(goal);*/
+		System.out.println(mapStop().toString());
 		// halt
 		while (true) {}
 	}
+	
+	
+	
+	/** spins, taking pictures and building the map */
+	public MapStop mapStop() {
+		// make a copy of the waypoint
+		double keyAngle = currentPosition.getTheta();
+		Waypoint location = new Waypoint(currentPosition.getX(),
+			currentPosition.getY(), keyAngle);
+		// get the key target color
+		BufferedImage rawImageArray[] = burstFire();
+		Target keyTarget = d3aIP.targetFromRawImg(d3aIP.average(rawImageArray));
+		if (null == keyTarget) {
+			System.out.println("MapStop thinks keyTarget is null");
+		} else {
+			int keyTargetColor = keyTarget.getTargetColorInt();
+			// make the map stop
+			MapStop stop = new MapStop(location, keyTargetColor);
+			// this.map.addStop(stop);
+			// spin while making map views
+			double currentAngle = keyAngle + 90 + 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			this.learnView(stop, currentAngle);
+			currentAngle += 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			this.learnView(stop, currentAngle);
+			currentAngle += 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			this.learnView(stop, currentAngle);
+			currentAngle += 90 + 45;
+			if (currentAngle >= 360) {
+				currentAngle -= 360;
+			}
+			super.driveTo(new Waypoint(location.getX(), location.getY(), currentAngle));
+			return map.pickMostSimilarTo(stop);
+		}
+		return null;
+	}
+	
+	public void learnView(MapStop stop, double angle) {
+		MapView view = new MapView((int) angle);
+		stop.addView(view);
+		Histogram hLeft = view.getHistogram(MapView.LEFT);
+		Histogram hMiddle = view.getHistogram(MapView.MIDDLE);
+		Histogram hRight = view.getHistogram(MapView.RIGHT);
+		
+		BufferedImage rawImageArray[] = burstFire();
+		BufferedImage noiseReduced = d3aIP.reduceNoise(d3aIP
+				.average(rawImageArray));
+		BufferedImage allHueSegmented = d3aIP.segmentOutAllHues(noiseReduced);
+		d3aIP.histOf(allHueSegmented, 0, hLeft);
+		d3aIP.histOf(allHueSegmented, 1, hMiddle);
+		d3aIP.histOf(allHueSegmented, 2, hRight);
+	}
+	
+	
+	
+	
+	
+	
 
 	private BufferedImage actAsIfJustKidnapped() {
 		BufferedImage rawImageArray[] = burstFire();

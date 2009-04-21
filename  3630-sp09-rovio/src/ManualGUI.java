@@ -30,6 +30,8 @@ public class ManualGUI {
 	private JButton autoModeButton;
 	private JLabel status;
 	private JButton driveForwardButton;
+	private JButton df50;
+	private JButton df12;
 	private JButton turnLeftButton;
 	private JButton turnRightButton;
 	
@@ -63,7 +65,7 @@ public class ManualGUI {
 		panel.add(this.north(), BorderLayout.NORTH);
 		panel.add(this.south(), BorderLayout.SOUTH);
 		panel.add(this.center(), BorderLayout.CENTER);
-		panel.add(this.west(), BorderLayout.WEST);
+		//panel.add(this.west(), BorderLayout.WEST);
 		return panel;
 	}
 	
@@ -84,7 +86,7 @@ public class ManualGUI {
 	
 	public JPanel center() {
 		centerPanel = new JPanel();
-		centerPanel.setPreferredSize(new Dimension(300, 480));
+		centerPanel.setPreferredSize(new Dimension(300, 200));
 		this.status = new JLabel("status: waiting for command");
 		centerPanel.add(this.status);
 		return centerPanel;
@@ -92,7 +94,7 @@ public class ManualGUI {
 	
 	public JPanel south() {
 		JPanel panel = new JPanel();
-		this.driveForwardButton = new JButton("drive forward");
+		this.driveForwardButton = new JButton("drive forward 1 meter");
 		this.turnLeftButton = new JButton("turn left");
 		this.turnRightButton = new JButton("turn right");
 		panel.add(this.turnLeftButton);
@@ -107,6 +109,19 @@ public class ManualGUI {
 		this.driveForwardButton.addKeyListener(this.kl);
 		this.turnRightButton.addActionListener(this.bl);
 		this.turnRightButton.addKeyListener(this.kl);
+		
+		this.df50 = new JButton("0.5 meters");
+		panel.add(this.df50);
+		this.df50.setActionCommand("df50");
+		this.df50.addActionListener(this.bl);
+		this.df50.addKeyListener(this.kl);
+		
+		this.df12 = new JButton("0.125 meters");
+		panel.add(this.df12);
+		this.df12.setActionCommand("df12");
+		this.df12.addActionListener(this.bl);
+		this.df12.addKeyListener(this.kl);
+		
 		return panel;
 	}
 	
@@ -156,6 +171,12 @@ public class ManualGUI {
 				} else if (e.getActionCommand().equals("mapStop")) {
 					setStatus("map stop");
 					planner.mapStop();
+				} else if (e.getActionCommand().equals("df50")) {
+					setStatus("driving 50 cm");
+					planner.driveForward(0.5);
+				} else if (e.getActionCommand().equals("df12")) {
+					setStatus("driving 12.5 cm");
+					planner.driveForward(0.125);
 				} else if (e.getActionCommand().equals("autoMode")) {
 					setStatus("automatic mode");
 					planner.autoMode();
@@ -183,11 +204,17 @@ public class ManualGUI {
 					planner.turnRight();
 				} else if (e.getKeyCode() == KeyEvent.VK_UP) {
 					setStatus("driving forward");
+					planner.driveForward(0.125);
+				} else if (e.getKeyCode() == KeyEvent.VK_S) {
+					setStatus("driving forward");
+					planner.driveForward(0.5);
+				} else if (e.getKeyCode() == KeyEvent.VK_W) {
+					setStatus("driving forward");
 					planner.driveForward();
-				} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				}/* else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 					setStatus("map stop");
 					planner.mapStop();
-				}
+				}*/
 			}
 		}
 	}

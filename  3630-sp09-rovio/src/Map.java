@@ -23,6 +23,7 @@ public class Map {
 	* algorithm: read inline comments
 	*/
 	public MapStop pickMostSimilarTo(MapStop perceived) {
+		System.out.println(perceived.toString());
 		// make an array to store the probabilities of stops
 		int[] probs = new int[this.numStops];
 		// iterate over the stops in the map

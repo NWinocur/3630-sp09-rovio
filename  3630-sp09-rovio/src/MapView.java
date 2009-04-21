@@ -35,10 +35,10 @@ public class MapView {
 	}
 	
 	public String toString() {
-		String s = String.format("map view at angle %d: [ ", this.angle);
+		String s = String.format("\tmap view at angle %d: [ ", this.angle);
 		s = s + "left: " + this.zones[0].toString() + ", ";
 		s = s + "middle: " + this.zones[1].toString() + ", ";
-		s = s + "right: " + this.zones[2].toString() + " ]";
+		s = s + "right: " + this.zones[2].toString() + " ]\n";
 		return s;
 	}
 	
