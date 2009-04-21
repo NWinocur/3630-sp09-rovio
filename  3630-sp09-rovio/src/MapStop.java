@@ -51,6 +51,15 @@ public class MapStop {
 		return null;
 	}
 	
+	public String rawString() {
+		String s = String.format("%f,%f,%f,%d,", location.getX(), location.getY(), location.getTheta(), keyTargetColor);
+		for (int i = 0; i < viewCount; i++) {
+			s = s + this.views[i].rawString() + ",";
+		}
+		s = s + " \n";
+		return s;
+	}
+	
 	public String toString() {
 		String s = "map stop at location ";
 		s = s

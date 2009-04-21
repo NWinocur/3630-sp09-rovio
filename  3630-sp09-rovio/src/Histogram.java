@@ -48,6 +48,15 @@ public class Histogram {
 		this.setFreq(color, this.getFreq(color) + 1);
 	}
 	
+	public String rawString() {
+		String s = "";
+		for (int i = 0; i < 4; i++) {
+			s = String.format(s + "%d" + "\", this.freqs[i]);
+		}
+		s = String.format(s + "%d", this.freqs[4]);
+		return s;
+	}
+	
 	public String toString() {
 		String s = "histogram: ( ";
 		for (int i = 0; i < 4; i++) {

@@ -15,12 +15,47 @@ public class Demo3Automatic extends Planner {
 	private int confusedTurns;
 	private DistanceTable distanceTable;
 	
+	public void readFromRawFile() {
+		Map toReturn = new Map();
+		try {
+			Scanner ls = new Scanner(filename);
+			while (ls.hasNextLine()) {
+				Scanner s = new Scanner(ls.nextLine());
+				// get in key target
+				s.useDelimiter(",");
+				try {
+					Waypoint keyWaypoint = new Waypoint(s.nextDouble(), s
+							.nextDouble(), s
+							.nextDouble());
+					int keyColor = s.nextInt();
+					MapStop stopToAdd = toReturn.createStop(keyWaypoint, keyColor);
+					// added keytarget to map, time to add 3 views
+					stopToAdd.addView(readInMapView(s));
+					stopToAdd.addView(readInMapView(s));
+					stopToAdd.addView(readInMapView(s));
+				} catch (Exception e) {
+					System.out.println("input file is in the wrong format");
+					e.printStackTrace();
+				}
+			}
+			map = toReturn;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		map = null;
+	}
 
 	public Demo3Automatic(Robot robot, ColorSpace cspace, Map map) {
 		super(robot);
 		super.currentPosition = new Waypoint(-1337, -1337, 42);
-		this.cspace = cspace;
-		this.map = map;
+		if (cspace != null) {
+			this.cspace = cspace;
+			this.map = map;
+		} else {
+			cspace = new ColorSpace();
+			cspace.setAllDefaults();
+			readFromRawFile();
+		}
 		this.d3aIP = new ImageProc();
 		this.confusedTurns = 1;
 		try {
@@ -36,38 +71,42 @@ public class Demo3Automatic extends Planner {
 	 * @param s
 	 */
 	static private MapView readInMapView(Scanner s) {
-		s.nextLine();
-		s.findInLine("view at angle: ");
-		s.useDelimiter(": [ ");
+	
+		s.useDelimiter(" ");
 		int viewAngle = s.nextInt();
+		
+		s.useDelimiter(" ");
+		Scanner s2 = new Scanner(s.next());
 		Histogram left = new Histogram();
-		s.findInLine("histogram: ( ");
-		s.useDelimiter(", ");
+		s2.useDelimiter("\");
 		for (int col = 0; col < 5; col++) {
 			left.setFreq(col, s.nextInt());
 		}
 
+		s2 = new Scanner(s.next());
+		s2.useDelimiter("\");
 		Histogram mid = new Histogram();
-		s.findInLine("histogram: ( ");
-		s.useDelimiter(", ");
 		for (int col = 0; col < 5; col++) {
 			mid.setFreq(col, s.nextInt());
 		}
 
+		s2 = new Scanner(s.next());
+		s2.useDelimiter("\");
 		Histogram right = new Histogram();
-		s.findInLine("histogram: ( ");
-		s.useDelimiter(", ");
 		for (int col = 0; col < 5; col++) {
 			right.setFreq(col, s.nextInt());
 		}
 
 		MapView aView = new MapView(viewAngle);
+		aView.setZone(0, left);
+		aView.setZone(1, mid);
+		aView.setZone(2, right);
 		// need to initialize histograms to useful read-in values!!!
 		return aView;
 	}
 	
 	static public List<Waypoint> loadMapFromFile(File filename) {
-		List<Waypoint> path = new Vector<Waypoint>();
+		//List<Waypoint> path = new Vector<Waypoint>();
 		Map toReturn = new Map();
 		try {
 			Scanner ls = new Scanner(filename);
