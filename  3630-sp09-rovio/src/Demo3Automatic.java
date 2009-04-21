@@ -1,6 +1,10 @@
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.List;
+import java.util.Scanner;
+import java.util.Vector;
 
 
 public class Demo3Automatic extends Planner {
@@ -24,6 +28,81 @@ public class Demo3Automatic extends Planner {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * expects description of mapView to be on next line
+	 * 
+	 * @param s
+	 */
+	static private MapView readInMapView(Scanner s) {
+		s.nextLine();
+		s.findInLine("view at angle: ");
+		s.useDelimiter(": [ ");
+		int viewAngle = s.nextInt();
+		Histogram left = new Histogram();
+		s.findInLine("histogram: ( ");
+		s.useDelimiter(", ");
+		for (int col = 0; col < 5; col++) {
+			left.setFreq(col, s.nextInt());
+		}
+
+		Histogram mid = new Histogram();
+		s.findInLine("histogram: ( ");
+		s.useDelimiter(", ");
+		for (int col = 0; col < 5; col++) {
+			mid.setFreq(col, s.nextInt());
+		}
+
+		Histogram right = new Histogram();
+		s.findInLine("histogram: ( ");
+		s.useDelimiter(", ");
+		for (int col = 0; col < 5; col++) {
+			right.setFreq(col, s.nextInt());
+		}
+
+		MapView aView = new MapView(viewAngle);
+		// need to initialize histograms to useful read-in values!!!
+		return aView;
+	}
+	
+	static public List<Waypoint> loadMapFromFile(File filename) {
+		List<Waypoint> path = new Vector<Waypoint>();
+		Map toReturn = new Map();
+		try {
+			Scanner ls = new Scanner(filename);
+			while (ls.hasNextLine()) {
+				Scanner s = new Scanner(ls.nextLine());
+				// get in key target
+				s.findInLine("( ");
+				s.useDelimiter(", ");
+				try {
+					Waypoint keyWaypoint = new Waypoint(s.nextDouble(), s
+							.nextDouble(), s
+							.nextDouble());
+					s.findInLine("with color ");
+					s.useDelimiter(" and views:");
+					int keyColor = s.nextInt();
+					MapStop stopToAdd = toReturn.createStop(keyWaypoint,
+							keyColor);
+					// added keytarget to map, time to add 3 views
+					stopToAdd.addView(readInMapView(s));
+					stopToAdd.addView(readInMapView(s));
+					stopToAdd.addView(readInMapView(s));
+					
+					
+					
+					
+				} catch (Exception e) {
+					System.out.println("input file is in the wrong format");
+					e.printStackTrace();
+				}
+			}
+			return path;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	public void makeMove() {
