@@ -17,7 +17,7 @@ public class Demo3Automatic extends Planner {
 		this.cspace = cspace;
 		this.map = map;
 		this.d3aIP = new ImageProc();
-		this.confusedTurns = 0;
+		this.confusedTurns = 1;
 		try {
 			distanceTable = new DistanceTable(new File("distanceTable.txt"));
 		} catch (FileNotFoundException e) {
@@ -90,13 +90,14 @@ public class Demo3Automatic extends Planner {
 			return null;
 		} else
 		{
+			confusedTurns = 1;
 			// if targets in view, pick one. Preferably "best" one.
 			// todo: decide what constitutes "best." At the moment it's
 			// "biggest"
 			// looking for "biggest" without much checking for validity
 			// could cause problems.
 			System.out.println("Chose a 'best' target; has color "
-					+ bestTargetInView.getTargetColor() + " and area "
+					+ bestTargetInView.getTargetColorInt() + " and area "
 					+ bestTargetInView.getAreaWithRespectToCorners());
 		}
 
@@ -197,9 +198,6 @@ public class Demo3Automatic extends Planner {
 			BufferedImage singleHueSegmentedImg = d3aIP.segmentOutAHue(
 					allHueSegmentedImg, targetHue, targetHueWindow, sat);
 			// ImageProc.showImage(singleHueSegmentedImg);
-			System.out
-					.println("PickBestTargetInView about to call for colorInt"
-							+ t);
 			potentialTarget[t] = d3aIP.targetFromSingleHueSegmentedImg(
 					singleHueSegmentedImg, t);
 		}
@@ -222,10 +220,16 @@ public class Demo3Automatic extends Planner {
 		}
 		else
 		{
-			System.out
-					.println("pickBestTargetInView chose the target with color int "
-							+ biggestTarget);
-			ImageProc.showImage(allHueSegmentedImg);
+			boolean wantToShowWhatBestTargetWas = true;
+			if (wantToShowWhatBestTargetWas) {
+				int targetHue = cspace.getTargetingData(biggestTarget, 0);
+				int targetHueWindow = cspace.getTargetingData(biggestTarget, 1);
+				int sat = cspace.getTargetingData(biggestTarget, 2);
+				BufferedImage singleHueSegmentedImg = d3aIP.segmentOutAHue(
+						allHueSegmentedImg, targetHue, targetHueWindow, sat);
+				ImageProc.showImage(singleHueSegmentedImg);
+			}
+			
 			return potentialTarget[biggestTarget];
 		}
 			
