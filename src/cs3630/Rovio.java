@@ -27,44 +27,6 @@ public class Rovio extends Authenticator {
 	 */
 	public static void main(String[] args) {
 		
-		Rovio myRovio = null;
-		
-		// Create the Rovio
-		try {
-			myRovio = new Rovio("192.168.10.18", "admin", "cs3630");
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		try {
-			myRovio.doTurnTest();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void doTurnTest() throws Exception {
-		this.turnByNumber(RotateDirection.LEFT, Utils.angle180);
-		this.pause(sleepAmountInMillis);
-		this.pause(1000);
-		this.turnByNumber(RotateDirection.RIGHT, Utils.angle180);
-		this.pause(sleepAmountInMillis);
-		this.pause(1000);
-		
-		System.out.println("Turning with angle of 1\n");
-		
-		this.turnByNumber(RotateDirection.LEFT, 1);
-		this.pause(sleepAmountInMillis);
-		this.turnByNumber(RotateDirection.LEFT, 1);
-		this.pause(sleepAmountInMillis);
-		this.turnByNumber(RotateDirection.LEFT, 1);
-	}
-
-	public void doImageTest() throws Exception {
-		
-		BufferedImage image = ImageLab.medianFilter(this.getImage());
-		ImagePanel.showImage(image);
 	}
 	
 	public Rovio(String ipAddress, String username, String password) throws MalformedURLException {
@@ -109,6 +71,36 @@ public class Rovio extends Authenticator {
 		
 		return response;
 		
+	}
+	
+	public void driveByPulse(DriveDirection d, int numPulses) throws Exception {
+		for(int i = 0; i < numPulses; i++) {
+			if(d == DriveDirection.BACKWARD) {
+				this.doCommand(Command.DRIVE_BACKWARD);
+			}
+			else if(d == DriveDirection.FORWARD) {
+				this.doCommand(Command.DRIVE_FORWARD);
+			}
+			else if(d == DriveDirection.LEFT) {
+				this.doCommand(Command.DRIVE_LEFT);
+			}
+			else if(d == DriveDirection.RIGHT) {
+				this.doCommand(Command.DRIVE_RIGHT);
+			}
+			else if(d == DriveDirection.DIAG_BACKWARD_LEFT) {
+				this.doCommand(Command.DRIVE_DIAG_BACKWARD_LEFT);
+			}
+			else if(d == DriveDirection.DIAG_BACKWARD_RIGHT) {
+				this.doCommand(Command.DRIVE_DIAG_BACKWARD_RIGHT);
+			}
+			else if(d == DriveDirection.DIAG_FORWARD_LEFT) {
+				this.doCommand(Command.DRIVE_DIAG_FORWARD_LEFT);
+			}
+			else if(d == DriveDirection.DIAG_FORWARD_RIGHT) {
+				this.doCommand(Command.DRIVE_DIAG_BACKWARD_RIGHT);
+			}
+			this.pause(this.sleepAmountInMillis);
+		}
 	}
 	
 	public BufferedImage getImage() throws IOException {
@@ -160,17 +152,18 @@ public class Rovio extends Authenticator {
 
 	public void turnByNumber(RotateDirection dir, int numAngle) throws Exception {
 		
-		String cmdLeft = "rev.cgi?Cmd=nav&action=18&drive=18&speed=" + Command.speed + "&angle=" + numAngle;
-		String cmdRight = "rev.cgi?Cmd=nav&action=18&drive=17&speed=" + Command.speed + "&angle=" + numAngle;
+		String cmdLeft = "rev.cgi?Cmd=nav&action=18&drive=17&speed=" + Command.speed + "&angle=" + numAngle;
+		String cmdRight = "rev.cgi?Cmd=nav&action=18&drive=18&speed=" + Command.speed + "&angle=" + numAngle;
 		
 		if(dir == RotateDirection.LEFT) {
 				this.doCommand(cmdLeft);
-				this.pause(this.sleepAmountInMillis);
 		}
 		else {		// dir == RotateDirection.RIGHT
 				this.doCommand(cmdRight);
-				this.pause(this.sleepAmountInMillis);
 		}
+		
+		this.pause(800 * numAngle);
+		
 	}
 	
 	public enum ResponseCode {

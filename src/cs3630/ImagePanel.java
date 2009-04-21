@@ -10,7 +10,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 
 public class ImagePanel extends Panel {
-	//private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
 	private BufferedImage image;
 
@@ -30,13 +30,26 @@ public class ImagePanel extends Panel {
 		g.drawImage(image, 0, 0, null);
 	}
 	
-	static public void showImage(BufferedImage image) {
-		JFrame frame = new JFrame("Image Panel");
+	static public void showImage(BufferedImage image, String title) {
+		JFrame frame = new JFrame(title);
 		Panel panel = new ImagePanel(image);
 		frame.getContentPane().add(panel);
-		frame.setSize(640, 480);
+		frame.setSize(640, 500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
+	}
+	
+	public void showImage(String title) {
+		JFrame frame = new JFrame(title);
+		Panel panel = new ImagePanel(this.image);
+		frame.getContentPane().add(panel);
+		frame.setSize(640, 500);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setVisible(true);
+	}
+	
+	public BufferedImage getImage() {
+		return this.image;
 	}
 
 }
