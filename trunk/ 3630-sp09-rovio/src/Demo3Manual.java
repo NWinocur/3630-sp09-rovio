@@ -68,6 +68,8 @@ public class Demo3Manual extends Planner {
 		// get the key target color
 		BufferedImage rawImageArray[] = burstFire();
 		Target keyTarget = iproc.targetFromRawImg(iproc.average(rawImageArray));
+		if (null == keyTarget)
+			System.out.println("MapStop thinks keyTarget is null");
 		int keyTargetColor = keyTarget.getTargetColorInt();
 		// make the map stop
 		MapStop stop = new MapStop(location, keyTargetColor);
